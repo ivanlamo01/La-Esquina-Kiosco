@@ -34,7 +34,7 @@ type Product = {
 
 // Dummy business data (can be moved to a context or config like in other files)
 const businessData = {
-  name: process.env.NEXT_PUBLIC_BUSINESS_NAME || "Kiosco Suriges",
+  name: process.env.NEXT_PUBLIC_BUSINESS_NAME || "La Esquina Kiosco",
   cuit: process.env.NEXT_PUBLIC_BUSINESS_CUIT || "-",
   address: process.env.NEXT_PUBLIC_BUSINESS_ADDRESS || "-",
   startActivity: process.env.NEXT_PUBLIC_BUSINESS_START_ACTIVITY || undefined,

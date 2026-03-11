@@ -10,9 +10,9 @@ import { useReactToPrint } from "react-to-print";
 
 // Hardcoded business data or fetch from settings
 const BUSINESS_DATA: BusinessData = {
-    name: "Kiosco Suriges",
+    name: "La Esquina Kiosco",
     cuit: "20409378472", 
-    address: "Calle AAA 123, Magdalena",
+    address: "Calle AAA 123, Berazagtegui, Buenos Aires",
     startActivity: "01/01/2020",
     iibb: "20-40937847-2",
     condition: "Responsable Inscripto" // Assuming RI based on A/B requirement, or Monotributo

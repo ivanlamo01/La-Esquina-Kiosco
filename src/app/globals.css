@@ -129,8 +129,8 @@ header .flex.items-center span {
 }
 
 /* Brighten the naturally yellow logo image and add shadow for contrast - REFINED TO GOLDEN & INTENSE GLOW */
-#sidebar-logo img,
-header img {
+#sidebar-logo Image,
+header Image {
   filter: sepia(0.2) saturate(2.2) brightness(1.1) hue-rotate(-5deg) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 10px rgba(124, 179, 119, 0.8)) drop-shadow(0 0 20px rgba(124, 179, 119, 0.6));
 }
 

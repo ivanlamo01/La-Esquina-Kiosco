@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useAuthContext } from "../Context/AuthContext";
 import Link from "next/link";
@@ -69,7 +69,7 @@ const NavBar: React.FC = () => {
       >
         {/* LOGO AREA (Desktop) */}
         <div id="sidebar-logo" className={`flex items-center justify-between lg:justify-center border-b border-border transition-all duration-300 ${isCollapsed ? "py-4" : "py-6"} px-4 lg:px-0`}>
-          <img src="/logo.png" alt="Logo Kiosco" className={`w-auto drop-shadow-xl transition-all duration-300 ${isCollapsed ? "h-16" : "h-36"}`} />
+          <Image src="/logo.png" alt="Logo Kiosco" className={`w-auto drop-shadow-xl transition-all duration-300 ${isCollapsed ? "h-16" : "h-36"}`} />
           <button 
             onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-2 text-foreground hover:bg-accent rounded-lg transition-colors"

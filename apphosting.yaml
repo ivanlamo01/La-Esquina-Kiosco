@@ -23,7 +23,7 @@ env:
     value: "G-06NP5NRBTF"
 
 
-
   # Secretos (Configurar en Cloud Secret Manager)
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
+ 
