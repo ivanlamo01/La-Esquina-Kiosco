@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const dotenv = require('dotenv');
+dotenv.config({ path: '.env.local' });
 dotenv.config({ path: '.env' });
 
 // Configuración de credenciales
@@ -19,7 +20,7 @@ if (!admin.apps.length) {
       });
       console.log('Firebase Admin inicializado con credenciales de entorno.');
     } else {
-      console.warn('No se encontraron credenciales completas (FB_CLIENT_EMAIL, FB_PRIVATE_KEY) en .env.');
+      console.warn('No se encontraron credenciales completas (FB_CLIENT_EMAIL, FB_PRIVATE_KEY) en .env.local/.env.');
       console.log('Intentando usar Application Default Credentials (ADC) con Project ID...');
       
       const config = {};
@@ -27,7 +28,7 @@ if (!admin.apps.length) {
         config.projectId = serviceAccount.projectId;
         console.log(`Usando Project ID: ${serviceAccount.projectId}`);
       } else {
-        console.warn('No se encontró Project ID en .env (NEXT_PUBLIC_FIREBASE_PROJECT_ID o FB_PROJECT_ID).');
+        console.warn('No se encontró Project ID en .env.local/.env (NEXT_PUBLIC_FIREBASE_PROJECT_ID o FB_PROJECT_ID).');
       }
 
       // Fallback a Application Default Credentials

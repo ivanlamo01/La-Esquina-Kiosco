@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { FaTimes, FaTrash, FaExclamationCircle, FaEdit } from "react-icons/fa";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { getAuth, User } from "firebase/auth";
+import type { FirebaseError } from "firebase/app";
 import CustomCarousel from "./customCarousel";
 import { Note } from "../types/taskTypes";
 import { db } from "../config/firebase";
@@ -13,6 +14,11 @@ import CustomAlert from "./CustomAlert";
 import { ACTIVE_MODULES } from "../../config/features";
 
 const auth = getAuth();
+
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const firebaseError = error as FirebaseError;
+  return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
 
 interface TopProduct {
   title: string;
@@ -66,8 +72,15 @@ const Main: React.FC = () => {
   }, []);
 
   const loadNotes = async () => {
-    const fetchedNotes = await getNotes();
-    setNotes(fetchedNotes);
+    try {
+      const fetchedNotes = await getNotes();
+      setNotes(fetchedNotes);
+    } catch (error) {
+      if (!isPermissionDeniedError(error)) {
+        console.error("Error cargando notas:", error);
+      }
+      setNotes([]);
+    }
   };
 
   const handleAddNote = async (e: React.FormEvent) => {
@@ -210,7 +223,9 @@ const Main: React.FC = () => {
       setTotalWeeklySales(totalSalesAmount);
       setTopProducts(sortedProducts);
     } catch (error) {
-      console.error("Error loading top products:", error);
+      if (!isPermissionDeniedError(error)) {
+        console.error("Error loading top products:", error);
+      }
     }
   };
 

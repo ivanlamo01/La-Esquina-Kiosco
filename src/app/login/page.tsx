@@ -11,6 +11,11 @@ import { doc, setDoc } from "firebase/firestore";
 import { getByEmail } from "../lib/services/usuariosServices";
 import { sendPasswordReset } from "../lib/services/usuariosServices";
 
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const firebaseError = error as FirebaseError;
+  return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
+
 function Login() {
   const { handleLogin, handleGoogleLogin, login } = useAuthContext(); 
   const [email, setEmail] = useState("");
@@ -54,15 +59,21 @@ function Login() {
         // Actualizar perfil básico (displayName)
         await updateProfile(user, { displayName: name });
 
-        // Crear documento en Firestore
-        await setDoc(doc(db, "Usuarios", user.uid), {
-          userId: user.uid,
-          nombre: name,
-          email: email,
-          rol: "user",
-          createdAt: new Date().toISOString(),
-          lastLogin: new Date()
-        });
+        // Crear documento en Firestore (si reglas lo permiten)
+        try {
+          await setDoc(doc(db, "Usuarios", user.uid), {
+            userId: user.uid,
+            nombre: name,
+            email: email,
+            rol: "user",
+            createdAt: new Date().toISOString(),
+            lastLogin: new Date()
+          });
+        } catch (profileErr) {
+          if (!isPermissionDeniedError(profileErr)) {
+            throw profileErr;
+          }
+        }
         
         // El login es automático tras crearse el usuario,
         // AuthContext detectará el cambio de estado con onAuthStateChanged.
@@ -99,9 +110,19 @@ function Login() {
 
   const onGoogleLogin = async () => {
     try {
+      setError(null);
       await handleGoogleLogin();
-    } catch  {
-      setError("Error al iniciar sesión con Google");
+    } catch (err: unknown) {
+      const firebaseError = err as FirebaseError;
+      const byCode: Record<string, string> = {
+        "auth/popup-blocked": "El navegador bloqueó la ventana emergente de Google. Habilitá popups e intentá de nuevo.",
+        "auth/popup-closed-by-user": "Se cerró la ventana de Google antes de completar el inicio de sesión.",
+        "auth/operation-not-allowed": "Google Sign-In no está habilitado en Firebase Authentication.",
+        "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Authentication.",
+        "auth/network-request-failed": "Error de red al conectar con Google. Revisá tu conexión.",
+      };
+      const code = firebaseError?.code || "";
+      setError(byCode[code] || `Error al iniciar sesión con Google (${code || "desconocido"}).`);
     }
   };
 

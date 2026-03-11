@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import type { FirebaseError } from "firebase/app";
 import { db } from "../config/firebase";
 
 interface WeeklyData {
@@ -18,6 +19,11 @@ interface WeeklyData {
     current: number;
     previous: number;
 }
+
+const isPermissionDeniedError = (error: unknown): boolean => {
+    const firebaseError = error as FirebaseError;
+    return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
 
 const WeeklySalesChart: React.FC = () => {
     const [weeklySalesData, setWeeklySalesData] = useState<WeeklyData[]>([]);
@@ -103,7 +109,12 @@ const WeeklySalesChart: React.FC = () => {
                 setTotalWeeklySales(totalThisWeek);
                 setTotalPreviousWeekSales(totalLastWeek);
             } catch (error) {
-                console.error("Error loading weekly sales comparison:", error);
+                if (!isPermissionDeniedError(error)) {
+                    console.error("Error loading weekly sales comparison:", error);
+                }
+                setWeeklySalesData([]);
+                setTotalWeeklySales(0);
+                setTotalPreviousWeekSales(0);
             }
         };
 

@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { collection, query, where, getDocs, limit, orderBy } from "firebase/firestore";
+import type { FirebaseError } from "firebase/app";
 import { db } from "../config/firebase";
+
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const firebaseError = error as FirebaseError;
+  return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
 
 interface Product {
   id: string;
@@ -110,7 +116,10 @@ const InventoryTable: React.FC = () => {
 
         setProducts(finalProducts);
       } catch (error) {
-        console.error("Error loading inventory table:", error);
+        if (!isPermissionDeniedError(error)) {
+          console.error("Error loading inventory table:", error);
+        }
+        setProducts([]);
       } finally {
         setLoading(false);
       }

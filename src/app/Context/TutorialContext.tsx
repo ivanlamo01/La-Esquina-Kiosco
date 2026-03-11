@@ -31,7 +31,7 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         { 
             element: '#sidebar-logo', 
             popover: { 
-                title: 'Bienvenido a Kiosco Suriges', 
+                title: 'Bienvenido a La Esquina Kiosco', 
                 description: 'Este es el panel principal de administración. Aquí podrás navegar por todas las secciones de tu sistema.',
                 popoverClass: 'driverjs-theme'
             } 
@@ -60,46 +60,47 @@ export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 popoverClass: 'driverjs-theme'
             } 
         },
-         { 
-            element: '#nav-debtors', 
-            popover: { 
-                title: 'Deudores', 
-                description: 'Lleva el control de las cuentas corrientes y deudas de tus clientes.',
-                popoverClass: 'driverjs-theme'
-            } 
-        },
-        { 
-            element: '#nav-sales', 
-            popover: { 
-                title: 'Historial de Ventas', 
-                description: 'Consulta el historial completo de todas las ventas realizadas.',
-                popoverClass: 'driverjs-theme'
-            } 
-        },
-        { 
-            element: '#nav-billing', 
-            popover: { 
-                title: 'Facturación', 
-                description: 'Emite facturas fiscales y gestiona documentos tributarios.',
-                popoverClass: 'driverjs-theme'
-            } 
-        },
-        { 
-            element: '#nav-expenses', 
-            popover: { 
-                title: 'Gastos', 
-                description: 'Registra los gastos del negocio para tener un balance real.',
-                popoverClass: 'driverjs-theme'
-            } 
-        },
-        { 
-            element: '#nav-charts', 
-            popover: { 
-                title: 'Gráficos y Estadísticas', 
-                description: 'Visualiza el rendimiento de tu negocio con gráficos detallados.',
-                popoverClass: 'driverjs-theme'
-            } 
-        },
+        // Pasos 5-9 del tutorial general (temporalmente desactivados para uso futuro)
+        // { 
+        //     element: '#nav-debtors', 
+        //     popover: { 
+        //         title: 'Deudores', 
+        //         description: 'Lleva el control de las cuentas corrientes y deudas de tus clientes.',
+        //         popoverClass: 'driverjs-theme'
+        //     } 
+        // },
+        // { 
+        //     element: '#nav-sales', 
+        //     popover: { 
+        //         title: 'Historial de Ventas', 
+        //         description: 'Consulta el historial completo de todas las ventas realizadas.',
+        //         popoverClass: 'driverjs-theme'
+        //     } 
+        // },
+        // { 
+        //     element: '#nav-billing', 
+        //     popover: { 
+        //         title: 'Facturación', 
+        //         description: 'Emite facturas fiscales y gestiona documentos tributarios.',
+        //         popoverClass: 'driverjs-theme'
+        //     } 
+        // },
+        // { 
+        //     element: '#nav-expenses', 
+        //     popover: { 
+        //         title: 'Gastos', 
+        //         description: 'Registra los gastos del negocio para tener un balance real.',
+        //         popoverClass: 'driverjs-theme'
+        //     } 
+        // },
+        // { 
+        //     element: '#nav-charts', 
+        //     popover: { 
+        //         title: 'Gráficos y Estadísticas', 
+        //         description: 'Visualiza el rendimiento de tu negocio con gráficos detallados.',
+        //         popoverClass: 'driverjs-theme'
+        //     } 
+        // },
         { 
             element: '#sidebar-user', 
             popover: { 

@@ -2,7 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import type { FirebaseError } from "firebase/app";
 import { db } from "../config/firebase";
+
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const firebaseError = error as FirebaseError;
+  return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
 
 interface Expense {
   id: string;
@@ -16,24 +22,31 @@ const ExpensesTableCar: React.FC = () => {
 
   useEffect(() => {
     const loadExpenses = async () => {
-      const q = query(
-        collection(db, "expenses"),
-        orderBy("date", "desc"),
-        limit(5)
-      );
-      const querySnapshot = await getDocs(q);
+      try {
+        const q = query(
+          collection(db, "expenses"),
+          orderBy("date", "desc"),
+          limit(5)
+        );
+        const querySnapshot = await getDocs(q);
 
-      const expensesList: Expense[] = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          description: data.description || "Sin descripción",
-          amount: Number(data.amount) || 0,
-          date: data.date?.toDate ? data.date.toDate() : undefined,
-        };
-      });
+        const expensesList: Expense[] = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            description: data.description || "Sin descripción",
+            amount: Number(data.amount) || 0,
+            date: data.date?.toDate ? data.date.toDate() : undefined,
+          };
+        });
 
-      setExpenses(expensesList);
+        setExpenses(expensesList);
+      } catch (error) {
+        if (!isPermissionDeniedError(error)) {
+          console.error("Error loading expenses:", error);
+        }
+        setExpenses([]);
+      }
     };
 
     loadExpenses();

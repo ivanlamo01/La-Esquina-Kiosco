@@ -30,20 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // BYPASS LOGIN IN DEVELOPMENT
-    if (process.env.NODE_ENV === "development") {
-      setUser({
-        id: "local-dev-admin",
-        userId: "local-dev-admin",
-        nombre: "Admin Local",
-        email: "admin@kiosco.local",
-        isAdmin: true,
-      } as Usuario);
-      setLogin(true);
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // 1. Traer claims
@@ -82,17 +68,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setLoading(false);
     });
-
-
-
-    // Inicializar Google Auth (Solo si es necesario para web/hybrid)
-    import("@codetrix-studio/capacitor-google-auth").then(({ GoogleAuth }) => {
-      GoogleAuth.initialize({
-        clientId: '89554017780-dsejb9g4uc2bbot1advdbq52cht6eu70.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      }); 
-    }).catch(err => console.warn("Google Auth failed to load (likely not hybrid environment):", err));
 
     return () => unsubscribe();
   }, []);

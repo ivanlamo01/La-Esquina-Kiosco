@@ -1,8 +1,14 @@
 import { db } from "../../config/firebase";
 import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, Timestamp, updateDoc } from "firebase/firestore";
+import type { FirebaseError } from "firebase/app";
 import { Note } from "../../types/taskTypes";
 
 const NOTES_COLLECTION = "notes";
+
+const isPermissionDeniedError = (error: unknown): boolean => {
+    const firebaseError = error as FirebaseError;
+    return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
 
 export const getNotes = async (): Promise<Note[]> => {
     try {
@@ -13,7 +19,9 @@ export const getNotes = async (): Promise<Note[]> => {
             ...doc.data()
         } as Note));
     } catch (error) {
-        console.error("Error getting notes:", error);
+        if (!isPermissionDeniedError(error)) {
+            console.error("Error getting notes:", error);
+        }
         return [];
     }
 };
@@ -29,7 +37,9 @@ export const addNote = async (title: string, content: string, importance: 'low' 
             deadline: deadline ? Timestamp.fromDate(new Date(deadline)) : null
         });
     } catch (error) {
-        console.error("Error adding note:", error);
+        if (!isPermissionDeniedError(error)) {
+            console.error("Error adding note:", error);
+        }
         throw error;
     }
 };
@@ -38,7 +48,9 @@ export const deleteNote = async (noteId: string) => {
     try {
         await deleteDoc(doc(db, NOTES_COLLECTION, noteId));
     } catch (error) {
-        console.error("Error deleting note:", error);
+        if (!isPermissionDeniedError(error)) {
+            console.error("Error deleting note:", error);
+        }
         throw error;
     }
 };
@@ -53,7 +65,9 @@ export const updateNote = async (noteId: string, data: Partial<Note>) => {
 
         await updateDoc(doc(db, NOTES_COLLECTION, noteId), updateData);
     } catch (error) {
-        console.error("Error updating note:", error);
+        if (!isPermissionDeniedError(error)) {
+            console.error("Error updating note:", error);
+        }
         throw error;
     }
 };

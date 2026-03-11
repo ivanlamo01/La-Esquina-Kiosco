@@ -466,11 +466,11 @@ const Tabla: React.FC = () => {
             <div className="relative w-full">
               <select
                 id="filter-category"
-                className={`w-full h-full ${filterCategory ? 'pr-10' : 'pr-4'} py-3 bg-input border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground appearance-none transition-all`}
+                className={`w-full h-full ${filterCategory ? 'pr-10' : 'pr-6'} pl-4 py-3 bg-input border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground appearance-none transition-all`}
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
               >
-                <option className="p-4" value="">Todas las Categorías</option>
+                <option className="m-4" value="">Todas las Categorías</option>
                 {Object.entries(categoriasMap).map(([id, name]) => (
                   <option className="bg-background text-foreground" key={id} value={id}>{name}</option>
                 ))}
@@ -499,7 +499,7 @@ const Tabla: React.FC = () => {
           <div className="md:col-span-3">
             <select
               id="filter-stock"
-              className={`w-full h-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer appearance-none font-medium
+              className={`w-full h-full pl-4 pr-6 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer appearance-none font-medium
                         ${filterStock === 'bajo' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
                   filterStock === 'sin' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-input text-foreground'}
                     `}

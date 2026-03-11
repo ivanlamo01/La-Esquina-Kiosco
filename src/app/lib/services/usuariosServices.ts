@@ -1,4 +1,5 @@
 import { auth, db } from "../../config/firebase";
+import type { FirebaseError } from "firebase/app";
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -11,28 +12,47 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import type { Usuario } from "../../types/authTypes";
 // 🔹 Modelo de usuario (ajusta campos según tu colección)
 
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const firebaseError = error as FirebaseError;
+  return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+};
+
 // 🔹 Obtener usuario por ID (colección Firestore)
 export async function getByUserId(userId: string): Promise<Usuario[]> {
-  const usuariosRef = collection(db, "Usuarios");
-  const q = query(usuariosRef, where("userId", "==", userId));
-  const querySnapshot = await getDocs(q);
+  try {
+    const usuariosRef = collection(db, "Usuarios");
+    const q = query(usuariosRef, where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Usuario, "id">),
-  }));
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<Usuario, "id">),
+    }));
+  } catch (error) {
+    if (isPermissionDeniedError(error)) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 // 🔹 Obtener usuario por email
 export async function getByEmail(email: string): Promise<Usuario[]> {
-  const usuariosRef = collection(db, "Usuarios");
-  const q = query(usuariosRef, where("email", "==", email.toLowerCase()));
-  const querySnapshot = await getDocs(q);
+  try {
+    const usuariosRef = collection(db, "Usuarios");
+    const q = query(usuariosRef, where("email", "==", email.toLowerCase()));
+    const querySnapshot = await getDocs(q);
 
-  return querySnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...(doc.data() as Omit<Usuario, "id">),
-  }));
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...(doc.data() as Omit<Usuario, "id">),
+    }));
+  } catch (error) {
+    if (isPermissionDeniedError(error)) {
+      return [];
+    }
+    throw error;
+  }
 }
 
 // 🔹 Login con Firebase Auth (email/password)
@@ -41,7 +61,6 @@ export async function loginUser(email: string, password: string): Promise<UserCr
 }
 
 import { Capacitor } from "@capacitor/core";
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import { isElectron, getElectronAPI } from "../utils/environment";
 import { doc, updateDoc } from "firebase/firestore";
 
@@ -64,9 +83,15 @@ export async function loginWithGoogle(): Promise<UserCredential> {
     }
     throw new Error("Electron API not found");
   } else if (Capacitor.isNativePlatform()) {
-    // 📲 Native: Usar Plugin
-    const googleUser = await GoogleAuth.signIn();
-    const idToken = googleUser.authentication.idToken;
+    // 📲 Native: Obtener ID token con plugin compatible con Capacitor 8
+    const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+    const signInResult = await FirebaseAuthentication.signInWithGoogle();
+    const idToken = signInResult.credential?.idToken;
+
+    if (!idToken) {
+      throw new Error("No se pudo obtener el ID token de Google en entorno nativo");
+    }
+
     const credential = GoogleAuthProvider.credential(idToken);
     return await import("firebase/auth").then(({ signInWithCredential }) =>
       signInWithCredential(auth, credential)

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import NavBar from "./NavBar";
 import MainLayout from "./MainLayout";
+import type { FirebaseError } from "firebase/app";
 
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -20,15 +21,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function AppShellClient({ children }: { children: React.ReactNode }) {
-    const { login, loading } = useAuthContext();
+    const { login, loading, user } = useAuthContext();
     const router = useRouter();
     const pathname = usePathname();
+
+    const isPermissionDeniedError = (error: unknown) => {
+        const firebaseError = error as FirebaseError;
+        return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
+    };
 
     useEffect(() => {
         // One-time Data Normalization (Firestore)
         const normalizeExistingData = async () => {
             const hasNormalizedV3 = localStorage.getItem('data_normalized_v3');
-            if (hasNormalizedV3 || !login) return;
+            if (hasNormalizedV3 || !login || !user?.isAdmin) return;
 
             console.log('[Maintenance] Starting one-time data normalization (V3)...');
             try {
@@ -78,25 +84,33 @@ function AppShellClient({ children }: { children: React.ReactNode }) {
                 localStorage.setItem('data_normalized_v3', 'true');
                 console.log('[Maintenance] Data normalization V3 complete.');
             } catch (err) {
-                console.error('[Maintenance] Normalization failed:', err);
+                if (!isPermissionDeniedError(err)) {
+                    console.error('[Maintenance] Normalization failed:', err);
+                }
             }
         };
 
         normalizeExistingData();
-    }, [login]);
+    }, [login, user?.isAdmin]);
 
     useEffect(() => {
         // Intentar sincronizar productos y ventas si estamos en Electron
         const syncData = async () => {
-            const { productService } = await import("../lib/services/productService");
-            const { saleService } = await import("../lib/services/saleService");
-            const { categoryService } = await import("../lib/services/categoryService");
+            try {
+                const { productService } = await import("../lib/services/productService");
+                const { saleService } = await import("../lib/services/saleService");
+                const { categoryService } = await import("../lib/services/categoryService");
 
-            await productService.syncPendingProducts();
-            await productService.syncFromFirestore();
-            await saleService.syncPendingSales();
-            await saleService.syncFromFirestore();
-            await categoryService.syncFromFirestore();
+                await productService.syncPendingProducts();
+                await productService.syncFromFirestore();
+                await saleService.syncPendingSales();
+                await saleService.syncFromFirestore();
+                await categoryService.syncFromFirestore();
+            } catch (err) {
+                if (!isPermissionDeniedError(err)) {
+                    console.error("[Sync] Error al sincronizar datos:", err);
+                }
+            }
         };
         syncData();
 

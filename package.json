@@ -1,15 +1,16 @@
 {
-  "name": "almacen-mgd",
+  "name": "la-esquina-kiosco",
   "version": "0.1.0",
+  "packageManager": "pnpm@10.28.2",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "deploy": "npm run build && firebase deploy",
+    "deploy": "pnpm run build && firebase deploy",
     "build:mobile": "cross-env IS_MOBILE_BUILD=true next build && npx cap sync",
     "open:android": "npx cap open android",
-    "electron:dev": "concurrently -k \"cross-env BROWSER=none npm run dev\" \"wait-on tcp:3000 && electron .\"",
+    "electron:dev": "concurrently -k \"cross-env BROWSER=none pnpm run dev\" \"wait-on tcp:3000 && electron .\"",
     "electron:build": "cross-env NEXT_PUBLIC_IS_ELECTRON=true next build && electron-builder",
     "postinstall": "electron-builder install-app-deps"
   },
@@ -48,10 +49,10 @@
   "dependencies": {
     "@afipsdk/afip.js": "^1.2.2",
     "@capacitor-community/sqlite": "^8.0.0",
+    "@capacitor-firebase/authentication": "^8.1.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
-    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@genkit-ai/firebase": "^1.25.0",
     "@genkit-ai/googleai": "^1.25.0",
     "better-sqlite3": "^12.6.2",
@@ -77,6 +78,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -84,11 +86,11 @@
     "@types/react-dom": "^19",
     "@types/react-icons": "^2.2.7",
     "@types/uuid": "^10.0.0",
+    "baseline-browser-mapping": "^2.10.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^40.0.0",
     "electron-builder": "^26.4.0",
-    "electron-rebuild": "^3.2.9",
     "electron-reload": "^2.0.0-alpha.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
@@ -96,5 +98,8 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "wait-on": "^9.0.3"
+  },
+  "optionalDependencies": {
+    "@next/swc-win32-x64-msvc": "^16.0.8"
   }
 }
