@@ -237,7 +237,7 @@ const Main: React.FC = () => {
   }, [alert]);
 
   return (
-    <div className="min-h-screen bg-transparent text-foreground p-6 lg:p-8 transition-colors duration-300 overflow-x-hidden relative">
+    <div className="min-h-screen bg-transparent text-foreground p-4 sm:p-6 lg:p-8 transition-colors duration-300 overflow-x-hidden relative">
 
       {alert && (
         <div

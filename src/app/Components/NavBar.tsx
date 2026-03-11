@@ -47,18 +47,16 @@ const NavBar: React.FC = () => {
   return (
     <>
       {/* --- MOBILE HEADER (Visible only on lg:hidden) --- */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border text-foreground flex items-center justify-center py-2 lg:hidden shadow-sm transition-colors duration-300">
-        <img src="/logo.png" alt="Logo Kiosco" className="h-24 w-auto drop-shadow-md" />
-        {user && (
-          <button
-            onClick={toggleSidebar}
-            className="absolute right-4 text-white focus:outline-none p-2 rounded-lg bg-primary hover:bg-primary/80 hover-primary transition-all"
-            aria-label="Abrir menú de navegación"
-            data-driver="mobile-menu-btn"
-          >
-            <FaBars className="h-6 w-6" />
-          </button>
-        )}</header>
+      {/* --- MOBILE MENU BUTTON (Floating) --- */}
+      {user && (
+        <button
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          className="fixed top-4 right-4 z-50 text-white focus:outline-none p-3 rounded-full bg-primary shadow-lg hover:bg-primary/80 lg:hidden transition-all active:scale-90"
+          aria-label="Abrir menú de navegación"
+        >
+          <FaBars className="h-6 w-6" />
+        </button>
+      )}
 
       {/* --- SIDEBAR --- */}
       <aside
@@ -70,8 +68,14 @@ const NavBar: React.FC = () => {
         `}
       >
         {/* LOGO AREA (Desktop) */}
-        <div id="sidebar-logo" className={`flex items-center justify-center border-b border-border transition-all duration-300 ${isCollapsed ? "py-4" : "py-6"}`}>
+        <div id="sidebar-logo" className={`flex items-center justify-between lg:justify-center border-b border-border transition-all duration-300 ${isCollapsed ? "py-4" : "py-6"} px-4 lg:px-0`}>
           <img src="/logo.png" alt="Logo Kiosco" className={`w-auto drop-shadow-xl transition-all duration-300 ${isCollapsed ? "h-16" : "h-36"}`} />
+          <button 
+            onClick={() => setIsMobileOpen(false)}
+            className="lg:hidden p-2 text-foreground hover:bg-accent rounded-lg transition-colors"
+          >
+            <FaTimes size={20} />
+          </button>
         </div>
 
         {/* USER INFO */}
@@ -129,39 +133,39 @@ const NavBar: React.FC = () => {
         <nav className="flex-1 flex flex-col py-4 gap-1 px-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
           <NavItem id="nav-home" href="/" icon={<FaHome size={18} />} label="Home" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
 
-          {ACTIVE_MODULES.inventario && (user?.isAdmin || user?.permissions?.inventario) && (
+          {ACTIVE_MODULES.inventario && /* (user?.isAdmin || user?.permissions?.inventario) && */ (
             <NavItem id="nav-inventory" href="/inventario" icon={<FaBoxOpen size={18} />} label="Inventario" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.pos && (user?.isAdmin || user?.permissions?.cart) && (
+          {ACTIVE_MODULES.pos && /* (user?.isAdmin || user?.permissions?.cart) && */ (
             <NavItem id="nav-cart" href="/cart" icon={<FaShoppingCart size={18} />} label="Punto de Venta" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.deudores && (user?.isAdmin || user?.permissions?.debtors) && (
+          {ACTIVE_MODULES.deudores && /* (user?.isAdmin || user?.permissions?.debtors) && */ (
             <NavItem id="nav-debtors" href="/debtors" icon={<FaUsers size={18} />} label="Deudores" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.usuarios && (user?.isAdmin || user?.permissions?.users) && (
+          {ACTIVE_MODULES.usuarios && /* (user?.isAdmin || user?.permissions?.users) && */ (
             <NavItem id="nav-users" href="/users" icon={<FaUserFriends size={18} />} label="Usuarios" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.ventas && (user?.isAdmin || user?.permissions?.sales) && (
+          {ACTIVE_MODULES.ventas && /* (user?.isAdmin || user?.permissions?.sales) && */ (
             <NavItem id="nav-sales" href="/sales" icon={<FaFileInvoiceDollar size={18} />} label="Ventas" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.facturacion && (user?.isAdmin || user?.permissions?.facturacion) && (
+          {ACTIVE_MODULES.facturacion && /* (user?.isAdmin || user?.permissions?.facturacion) && */ (
             <NavItem id="nav-billing" href="/facturacion" icon={<FaFileInvoiceDollar size={18} />} label="Facturación" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.facturas && (user?.isAdmin || user?.permissions?.facturas) && (
+          {ACTIVE_MODULES.facturas && /* (user?.isAdmin || user?.permissions?.facturas) && */ (
             <NavItem href="/facturas" icon={<FaFileInvoice size={18} />} label="Facturas" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.gastos && (user?.isAdmin || user?.permissions?.expenses) && (
+          {ACTIVE_MODULES.gastos && /* (user?.isAdmin || user?.permissions?.expenses) && */ (
             <NavItem id="nav-expenses" href="/expenses" icon={<FaChartLine size={18} />} label="Gastos" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
 
-          {ACTIVE_MODULES.graficos && (user?.isAdmin || user?.permissions?.graficos) && (
+          {ACTIVE_MODULES.graficos && /* (user?.isAdmin || user?.permissions?.graficos) && */ (
             <NavItem id="nav-charts" href="/graficos" icon={<FaChartPie size={18} />} label="Gráficos" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
           )}
         </nav>

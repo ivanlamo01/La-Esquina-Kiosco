@@ -21,19 +21,9 @@ env:
     value: "1:185158501444:web:abba583fb00f8a72a3a811"
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: "G-06NP5NRBTF"
-  - variable: AFIP_CUIT
-    value: "xxxxxxxxxxxx"
 
-  - variable: AFIP_POS_PRODUCTOS
-    value: "9"
 
 
   # Secretos (Configurar en Cloud Secret Manager)
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
-  - variable: AFIP_SDK_ACCESS_TOKEN
-    secret: AFIP_SDK_ACCESS_TOKEN 
-  - variable: AFIP_CERT
-    secret: AFIP_CERT
-  - variable: AFIP_KEY
-    secret: AFIP_KEY
