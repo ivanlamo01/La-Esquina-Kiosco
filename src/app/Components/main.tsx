@@ -262,8 +262,15 @@ const Main: React.FC = () => {
            <div className="animate-bounce-in-right h-full flex flex-col items-center justify-start">
              <div className="relative group">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-                <Image src="/Logo.png" alt="Logo La Esquina 24hs" className="h-40 md:h-64 lg:h-80 w-auto drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500 origin-center" />
-             </div>
+                 <Image
+                  src="/Logo.png"
+                  alt="Logo La Esquina 24hs"
+                  width={512}
+                  height={512}
+                  sizes="(max-width: 768px) 160px, (max-width: 1024px) 256px, 320px"
+                  className="h-40 md:h-64 lg:h-80 w-auto drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500 origin-center"
+                 />
+               </div>
            </div>
         </div>
       )}

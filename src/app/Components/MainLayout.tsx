@@ -10,7 +10,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <>
             <GraffitiBackground />
             <main
-                className={`min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? "lg:ml-20" : "lg:ml-60"
+                className={`relative z-10 min-h-screen transition-all duration-300 ease-in-out ${isCollapsed ? "lg:ml-20" : "lg:ml-60"
                 }`}
         >
             {children}

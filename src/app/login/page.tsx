@@ -173,12 +173,6 @@ function Login() {
               required
             />
 
-            {error && (
-              <div className="bg-red-500/20 border border-red-500 text-red-300 text-sm p-3 rounded-md">
-                {error}
-              </div>
-            )}
-
             {resetMessage && (
               <div className="bg-green-500/20 border border-green-500 text-green-300 text-sm p-3 rounded-md">
                 {resetMessage}
@@ -236,12 +230,6 @@ function Login() {
                 required
                 minLength={6}
               />
-
-              {error && (
-                <div className="bg-red-500/20 border border-red-500 text-red-300 text-sm p-3 rounded-md">
-                  {error}
-                </div>
-              )}
 
               <button
                 type="submit"

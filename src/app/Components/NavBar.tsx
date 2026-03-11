@@ -69,7 +69,14 @@ const NavBar: React.FC = () => {
       >
         {/* LOGO AREA (Desktop) */}
         <div id="sidebar-logo" className={`flex items-center justify-between lg:justify-center border-b border-border transition-all duration-300 ${isCollapsed ? "py-4" : "py-6"} px-4 lg:px-0`}>
-          <Image src="/Logo.png" alt="Logo Kiosco" className={`w-auto drop-shadow-xl transition-all duration-300 ${isCollapsed ? "h-16" : "h-36"}`} />
+          <Image
+            src="/Logo.png"
+            alt="Logo Kiosco"
+            width={512}
+            height={512}
+            sizes="(max-width: 1024px) 64px, 144px"
+            className={`w-auto drop-shadow-xl transition-all duration-300 ${isCollapsed ? "h-16" : "h-36"}`}
+          />
           <button 
             onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-2 text-foreground hover:bg-accent rounded-lg transition-colors"
@@ -130,7 +137,7 @@ const NavBar: React.FC = () => {
         )}
 
         {/* NAVIGATION LINKS */}
-        <nav className="flex-1 flex flex-col py-4 gap-1 px-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <nav className="flex-1 min-h-0 flex flex-col py-4 gap-1 px-3 overflow-visible custom-scrollbar">
           <NavItem id="nav-home" href="/" icon={<FaHome size={18} />} label="Home" collapsed={isCollapsed} onClick={() => setIsMobileOpen(false)} />
 
           {ACTIVE_MODULES.inventario && /* (user?.isAdmin || user?.permissions?.inventario) && */ (
@@ -252,7 +259,7 @@ const NavItem = ({ href, icon, label, collapsed, onClick, id }: { href: string; 
 
       {/* Tooltip for collapsed mode */}
       {collapsed && (
-        <div className="absolute left-16 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap hidden lg:block">
+        <div className="absolute left-16 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md border border-border opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[9999] whitespace-nowrap hidden lg:block">
           {label}
         </div>
       )}
