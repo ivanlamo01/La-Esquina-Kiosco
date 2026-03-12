@@ -69,14 +69,20 @@ const NavBar: React.FC = () => {
       >
         {/* LOGO AREA (Desktop) */}
         <div id="sidebar-logo" className={`flex items-center justify-between lg:justify-center border-b border-border transition-all duration-300 ${isCollapsed ? "py-4" : "py-6"} px-4 lg:px-0`}>
-          <Image
-            src="/Logo.png"
-            alt="Logo Kiosco"
-            width={512}
-            height={512}
-            sizes="(max-width: 1024px) 64px, 144px"
-            className={`w-auto drop-shadow-xl transition-all duration-300 ${isCollapsed ? "h-16" : "h-36"}`}
-          />
+          <div className="relative group">
+            <div 
+              className="absolute inset-0 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--glow-color) 20%, transparent)' }}
+            ></div>
+            <Image
+              src="/Logo.png"
+              alt="Logo Kiosco"
+              width={512}
+              height={512}
+              sizes="(max-width: 1024px) 64px, 144px"
+              className={`w-auto drop-shadow-xl transition-all duration-300 logo-glow relative z-10 ${isCollapsed ? "h-16" : "h-36"}`}
+            />
+          </div>
           <button 
             onClick={() => setIsMobileOpen(false)}
             className="lg:hidden p-2 text-foreground hover:bg-accent rounded-lg transition-colors"

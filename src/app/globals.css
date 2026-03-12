@@ -16,8 +16,8 @@
   --popover: #FFFFFF;
   --popover-foreground: #44403C;
 
-  --primary: #FF7300;
-  /* Naranja Fuego Vibrante */
+  --primary: #A855F7;
+  /* Violeta para Modo Claro (Antes Naranja) */
   --primary-foreground: #FFFFFF;
 
   --secondary: #F5F5F4;
@@ -45,6 +45,10 @@
 
   --radius: 1.5rem;
   /* Brand color is now driven by --primary */
+  --glow-color: #A855F7;
+  /* Violeta para Modo Claro */
+  --accent-brand: #A855F7;
+  /* Violeta para Modo Claro */
 }
 
 .dark {
@@ -87,6 +91,11 @@
   /* Bordes nítidos pero oscuros (Zinc-800) */
   --input: #27272A;
   --ring: #FF7300;
+
+  --glow-color: var(--primary);
+  /* Naranja para Modo Oscuro */
+  --accent-brand: var(--primary);
+  /* Naranja para Modo Oscuro */
 }
 
 @theme {
@@ -128,28 +137,33 @@ header .flex.items-center span {
   font-family: 'Chewy', system-ui !important;
 }
 
-/* Brighten the naturally yellow logo image and add shadow for contrast - REFINED TO GOLDEN & INTENSE GLOW */
-#sidebar-logo Image,
-header Image {
-  filter: sepia(0.2) saturate(2.2) brightness(1.1) hue-rotate(-5deg) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 10px rgba(124, 179, 119, 0.8)) drop-shadow(0 0 20px rgba(124, 179, 119, 0.6));
+/* Brighten the naturally yellow logo image and add shadow for contrast - REFINED TO DYNAMIC GLOW */
+/* We target 'img' because Next.js Image component renders an img tag */
+.logo-glow img,
+#sidebar-logo img,
+header img {
+  filter: sepia(0.2) saturate(2.2) brightness(1.1) hue-rotate(-5deg) 
+          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)) 
+          drop-shadow(0 0 10px color-mix(in srgb, var(--glow-color) 80%, transparent)) 
+          drop-shadow(0 0 20px color-mix(in srgb, var(--glow-color) 60%, transparent)) !important;
 }
 
-/* Accesorios con el color primario de la marca */
+/* Accesorios con el color de marca dinámico */
 .sidebar-item-active {
-  border-left: 4px solid var(--primary) !important;
-  background-color: color-mix(in srgb, var(--primary) 15%, transparent);
+  border-left: 4px solid var(--accent-brand) !important;
+  background-color: color-mix(in srgb, var(--accent-brand) 15%, transparent);
 }
 
 .hover-primary:hover {
-  box-shadow: 0 0 20px color-mix(in srgb, var(--primary) 50%, transparent) !important;
-  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--glow-color) 50%, transparent) !important;
+  border-color: var(--accent-brand) !important;
 }
 
-/* Glowing Primary Shadow - Base Rule (Applied to all cards) */
+/* Glowing Dynamic Shadow - Base Rule (Applied to all cards) */
 .bg-card,
 [class*="bg-card"] {
   border: none !important;
-  box-shadow: 0 0 15px color-mix(in srgb, var(--primary) 35%, transparent) !important;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--glow-color) 35%, transparent) !important;
   transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
   transform: none !important;
 }
@@ -177,11 +191,11 @@ nav {
   transform: none !important;
 }
 
-/* Dark mode shadow - resplandor más intenso para contrastar en piano black */
-.dark .bg-card,
-.dark [class*="bg-card"] {
+/* Tema shadow - resplandor dinámico */
+.bg-card,
+[class*="bg-card"] {
   border: none !important;
-  box-shadow: 0 0 20px color-mix(in srgb, var(--primary) 40%, transparent) !important;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--glow-color) 38%, transparent) !important;
 }
 
 /* Re-apply dark exclusion since source order matters */

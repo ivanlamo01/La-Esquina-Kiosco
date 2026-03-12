@@ -12,12 +12,29 @@ export default function GraffitiBackground() {
         Posicionado dinámicamente con el sidebar (ahora el contenedor empieza donde termina el NavBar).
       */}
       <div 
-        className="absolute bottom-0 left-0 w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-60 sm:opacity-90 dark:opacity-40 dark:sm:opacity-70 mix-blend-normal dark:mix-blend-screen drop-shadow-[0_0_10px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_0_15px_rgba(255,115,0,0.3)] transition-all duration-300"
+        className="absolute bottom-0 left-0 w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-100 dark:opacity-90 mix-blend-normal dark:mix-blend-screen transition-all duration-300"
         style={{
           backgroundImage: "url('/graffiti1.png')",
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'bottom left',
+          filter: 'saturate(1.5) contrast(1.25) drop-shadow(0 0 15px var(--glow-color))',
+        }}
+      />
+
+      {/* 
+        Graffiti 5: Margen superior izquierdo, simétrico al Graffiti 3.
+      */}
+      <div 
+        className="absolute top-8 left-[-30px] w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-100 dark:opacity-90 mix-blend-normal dark:mix-blend-screen transition-all duration-300"
+        style={{
+          backgroundImage: "url('/graffiti5.png')",
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'top left',
+          filter: 'saturate(1.5) contrast(1.25) drop-shadow(0 0 15px var(--glow-color))',
+          transform: 'rotate(-20deg)',
+          transformOrigin: 'top left'
         }}
       />
 
@@ -25,12 +42,13 @@ export default function GraffitiBackground() {
         Graffiti 3: Margen superior derecho del fondo principal.
       */}
       <div 
-        className="absolute top-0 right-4 sm:right-10 lg:right-20 w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-60 sm:opacity-90 dark:opacity-40 dark:sm:opacity-70 mix-blend-normal dark:mix-blend-screen drop-shadow-[0_0_10px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_0_15px_rgba(255,115,0,0.3)] transition-all duration-300"
+        className="absolute top-0 right-4 sm:right-10 lg:right-20 w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-100 dark:opacity-90 mix-blend-normal dark:mix-blend-screen transition-all duration-300"
         style={{
           backgroundImage: "url('/graffiti3.png')",
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'top right',
+          filter: 'saturate(1.5) contrast(1.25) drop-shadow(0 0 15px var(--glow-color))',
         }}
       />
 
@@ -38,12 +56,13 @@ export default function GraffitiBackground() {
         Graffiti 2: Margen inferior derecho, más hacia el centro.
       */}
       <div 
-        className="absolute bottom-0 right-4 sm:right-10 lg:right-20 w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-60 sm:opacity-90 dark:opacity-40 dark:sm:opacity-70 mix-blend-normal dark:mix-blend-screen drop-shadow-[0_0_10px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_0_15px_rgba(255,115,0,0.3)] transition-all duration-300"
+        className="absolute bottom-0 right-4 sm:right-10 lg:right-20 w-[10rem] h-[10rem] sm:w-[15rem] sm:h-[15rem] lg:w-[24rem] lg:h-[24rem] opacity-100 dark:opacity-90 mix-blend-normal dark:mix-blend-screen transition-all duration-300"
         style={{
           backgroundImage: "url('/graffiti2.png')",
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'bottom right',
+          filter: 'saturate(1.5) contrast(1.25) drop-shadow(0 0 15px var(--glow-color))',
         }}
       />
 
