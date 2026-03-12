@@ -421,7 +421,8 @@ function Cart() {
           addToCart(
             product,
             parseFloat(enteredPrice),
-            enteredDescription || product.data?.description || ""
+            enteredDescription || product.data?.description || "",
+            true // Force unique for Variables
           );
         } else if (enteredPrice !== null) {
           showAlert("danger", "Por favor, ingrese un precio válido.");
@@ -439,14 +440,14 @@ function Cart() {
         if (enteredWeight && !isNaN(Number(enteredWeight))) {
           const weightGrams = parseFloat(enteredWeight);
 
-          // Asumimos que product.data.price es el precio por gramo
-          const totalPrice = weightGrams * (product.data?.price ?? 0);
+          // Asumimos que product.data.price es el precio POR KILO
+          const totalPrice = (weightGrams / 1000) * (product.data?.price ?? 0);
 
           addToCart(
             product,
             totalPrice,
-            `${product.data?.description || ""}  ${weightGrams}g`,
-            true // Force Unique
+            `${product.data?.description || ""} (${weightGrams}g)`,
+            true // Force Unique for weighted items
           );
         } else if (enteredWeight !== null) {
           showAlert("danger", "Por favor, ingrese un peso válido en gramos.");
@@ -787,7 +788,7 @@ function Cart() {
           {/* Header & Buscador */}
           <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold text-primary flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-primary flex items-center gap-2 title-contrast-glow">
                 <FaShoppingCart /> Punto de Venta
               </h1>
               <button

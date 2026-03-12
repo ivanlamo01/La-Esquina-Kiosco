@@ -52,8 +52,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     forceUnique: boolean = false
   ) => {
     setCart((prevCart) => {
-      // Si es una categoría que requiere items únicos (ej: Variables o Peso con forceUnique)
-      if (product.data.category === "Variables" || forceUnique) {
+      // Si forceUnique es true (ej: Variables o Peso), generamos un ID único para evitar que se unifiquen
+      if (forceUnique) {
         // Generar un identificador único
         const uniqueId = uuidv4();
         return [

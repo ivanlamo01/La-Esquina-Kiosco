@@ -153,10 +153,10 @@ function AppShellClient({ children }: { children: React.ReactNode }) {
     // Show loading state while auth is being checked
     if (loading) {
         return (
-            <div className="flex h-screen items-center justify-center bg-background" style={{ backgroundColor: "white", color: "black" }}>
+            <div className="flex h-screen items-center justify-center bg-black">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-muted-foreground animate-pulse">Cargando aplicación...</p>
+                    <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-yellow-500/80 animate-pulse font-medium">Cargando aplicación...</p>
                 </div>
             </div>
         );
@@ -167,13 +167,7 @@ function AppShellClient({ children }: { children: React.ReactNode }) {
     }
 
     if (!login) {
-        return (
-            <div style={{ padding: 20, background: "white", color: "red" }}>
-                Redirecting to login... (Status: {login ? "Logged In" : "Logged Out"})
-                <br />
-                Current Path: {pathname}
-            </div>
-        );
+        return null; // Silent redirect handled by useEffect
     }
 
     return (

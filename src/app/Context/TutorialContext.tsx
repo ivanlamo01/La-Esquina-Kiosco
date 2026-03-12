@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { driver, DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 
+import { usePathname } from 'next/navigation';
+
 interface TutorialContextType {
   startTutorial: (type?: 'general' | 'specific') => void;
   isRunning: boolean;
@@ -13,13 +15,7 @@ const TutorialContext = createContext<TutorialContextType | undefined>(undefined
 
 export const TutorialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isRunning, setIsRunning] = useState(false);
-    const [pathname, setPathname] = useState<string>("");
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            setPathname(window.location.pathname || "");
-        }
-    }, []);
+  const pathname = usePathname();
 
   const startTutorial = (type: 'general' | 'specific' = 'general') => {
     setIsRunning(true);

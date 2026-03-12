@@ -154,6 +154,11 @@ header img {
   background-color: color-mix(in srgb, var(--accent-brand) 15%, transparent);
 }
 
+.title-contrast-glow {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--background) 80%, black),
+               0 0 20px color-mix(in srgb, var(--background) 50%, transparent) !important;
+}
+
 .hover-primary:hover {
   box-shadow: 0 0 20px color-mix(in srgb, var(--glow-color) 50%, transparent) !important;
   border-color: var(--accent-brand) !important;
