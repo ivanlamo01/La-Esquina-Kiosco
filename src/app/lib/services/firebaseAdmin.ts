@@ -5,9 +5,11 @@ import type { ServiceAccount } from "firebase-admin";
 
 let serviceAccount: ServiceAccount | undefined;
 
-if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+const saEnv = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+if (saEnv) {
   try {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) as ServiceAccount;
+    serviceAccount = JSON.parse(saEnv) as ServiceAccount;
   } catch (error) {
     console.warn("FIREBASE_SERVICE_ACCOUNT inválido:", error);
   }
