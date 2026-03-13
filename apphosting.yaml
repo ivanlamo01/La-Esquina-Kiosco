@@ -1,4 +1,4 @@
-# Configuración para Firebase App Hosting
+# Configuración para Firebase App Hosting (Identidad: la-esquina-kiosco)
 buildConfig:
   runCommand: pnpm run build
   installCommand: pnpm install

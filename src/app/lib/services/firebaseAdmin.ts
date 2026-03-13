@@ -3,6 +3,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import type { ServiceAccount } from "firebase-admin";
 
 
+// Sincronización de Identidad: la-esquina-kiosco
 let serviceAccount: ServiceAccount | undefined;
 
 const saEnv = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
