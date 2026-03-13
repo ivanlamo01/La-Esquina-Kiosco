@@ -14,7 +14,7 @@ const nextConfig = {
   images: {
     unoptimized: isStaticBuild,
   },
-  trailingSlash: isStaticBuild,
+  trailingSlash: isStaticBuild ? true : false,
 };
 
 module.exports = nextConfig;
