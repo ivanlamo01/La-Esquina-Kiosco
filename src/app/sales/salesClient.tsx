@@ -19,7 +19,7 @@ export default function SalesClient({ initialSales }: Props) {
     const router = useRouter();
     const [sales, setSales] = useState<SaleType[]>(initialSales);
     const [loading, setLoading] = useState(false);
-    const [facturandoId, setFacturandoId] = useState<string | null>(null);
+    // const [facturandoId, setFacturandoId] = useState<string | null>(null);
     const [totalRange, setTotalRange] = useState(
         initialSales.reduce((acc, s) => acc + s.total, 0)
     );
@@ -28,18 +28,14 @@ export default function SalesClient({ initialSales }: Props) {
     const [isPrintingTicket, setIsPrintingTicket] = useState(false);
     const printTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // --- Billing Modal State ---
-    const [showBillingModal, setShowBillingModal] = useState(false);
-    const [isBulkBilling, setIsBulkBilling] = useState(false);
-    const [billingSale, setBillingSale] = useState<SaleType | null>(null);
-    const [billingData, setBillingData] = useState({
-        cbteTipo: 11, // Default C
-        docTipo: 99,  // Default Consumidor Final
-        docNro: "",
-    });
-
     // --- Bulk Selection ---
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    
+    /* AFIP BILLING DISABLED
+    // --- Billing Modal State ---
+    const [showBillingModal, setShowBillingModal] = useState(false);
+    ... (omitted for brevity in replacement chunk logic, but I will comment the whole block)
+    */
 
     const handleSelectSale = (id: string, checked: boolean) => {
         const newSelected = new Set(selectedIds);
@@ -138,112 +134,11 @@ export default function SalesClient({ initialSales }: Props) {
         };
     }, []);
 
-    const handleFacturar = async (sale: SaleType) => {
-        setBillingSale(sale);
-        setIsBulkBilling(false);
-        setBillingData({
-            cbteTipo: 11,
-            docTipo: 99,
-            docNro: "",
-        });
-        setShowBillingModal(true);
-    };
-
-    const handleBulkFacturar = async () => {
-        if (selectedIds.size === 0) return;
-        setIsBulkBilling(true);
-        setBillingSale(null);
-        setBillingData({
-            cbteTipo: 11,
-            docTipo: 99,
-            docNro: "",
-        });
-        setShowBillingModal(true);
-    };
-
-    const confirmFacturar = async () => {
-        // Basic validation
-        if ((billingData.cbteTipo === 1 || billingData.cbteTipo === 6) && !billingData.docNro) {
-            showAlert("Error", "Para Factura A o B es obligatorio el número de documento (CUIT/DNI).", "error");
-            return;
-        }
-
-        setShowBillingModal(false);
-
-        if (isBulkBilling) {
-            await processBulkFacturar();
-        } else if (billingSale) {
-            await facturarSingle(billingSale, false, billingData);
-        }
-    };
-
-    const processBulkFacturar = async () => {
-        setLoading(true);
-        let successCount = 0;
-        let failCount = 0;
-
-        // Process sequentially to avoid overwhelming the API
-        const ids = Array.from(selectedIds);
-        for (const id of ids) {
-            const sale = sales.find(s => s.id === id);
-            if (sale) {
-                const res = await facturarSingle(sale, true, billingData);
-                if (res.success) successCount++;
-                else failCount++;
-            }
-        }
-
-        setLoading(false);
-        setSelectedIds(new Set()); // Clear selection
-        showAlert("Proceso Finalizado", `Se generaron ${successCount} facturas exitosamente. ${failCount > 0 ? `${failCount} fallaron.` : ""}`, successCount > 0 ? "success" : "error");
-    };
-
-    const facturarSingle = async (sale: SaleType, silent = false, options = { cbteTipo: 11, docTipo: 99, docNro: 0 as string | number }): Promise<{ success: boolean; id?: string; error?: string }> => {
-        if (!silent) setFacturandoId(sale.id);
-        try {
-            const res = await fetch("/api/afip/facturar", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    importe: Number(sale.total),
-                    items: sale.products,
-                    docTipo: options.docTipo,
-                    docNro: Number(options.docNro),
-                    cbteTipo: options.cbteTipo,
-                    concepto: 1,
-                    saleId: sale.id // Pass the sale ID to link it
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Error al facturar");
-
-            if (data.data && data.data.id) {
-                // Update local state to reflect the new invoice
-                setSales(prevSales => prevSales.map(s =>
-                    s.id === sale.id
-                        ? { ...s, facturaId: data.data.id }
-                        : s
-                ));
-            }
-
-            if (!silent) {
-                if (data.data && data.data.id) {
-                    router.push(`/facturas/${data.data.id}`);
-                } else {
-                    showAlert("Atención", "Factura creada, pero no se recibió ID.", "warning");
-                }
-            }
-            return { success: true, id: data.data?.id };
-
-        } catch (e) {
-            const message = e instanceof Error ? e.message : "Error desconocido";
-            if (!silent) showAlert("Error", "Error al facturar: " + message, "error");
-            return { success: false, error: message };
-        } finally {
-            if (!silent) setFacturandoId(null);
-        }
-    };
+    /* AFIP BILLING LOGIC DISABLED
+    const handleFacturar = async (sale: SaleType) => { ... }
+    ...
+    const facturarSingle = async (...) => { ... }
+    */
 
     const handleDelete = (saleId: string) => {
         showConfirm(
@@ -321,7 +216,7 @@ export default function SalesClient({ initialSales }: Props) {
 
     return (
         <>
-            <div className="min-h-screen bg-background text-foreground p-6 lg:p-8 transition-colors duration-300 print:hidden">
+            <div className="min-h-screen bg-transparent text-foreground p-6 lg:p-8 transition-colors duration-300 print:hidden">
                 <div className="max-w-6xl mx-auto space-y-6">
 
                     {/* Header */}
@@ -397,26 +292,11 @@ export default function SalesClient({ initialSales }: Props) {
                                 </span>
                                 <span className="font-medium text-foreground">seleccionados</span>
                             </div>
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <button
-                                    onClick={handleBulkFacturar}
-                                    disabled={loading}
-                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:opacity-90 px-4 py-2 rounded-lg font-bold shadow-sm transition-transform active:scale-95"
-                                >
-                                    {loading ? <FaSpinner className="animate-spin" /> : <FaFileInvoiceDollar />}
-                                    Facturar Seleccionadas
-                                </button>
-                                <button
-                                    onClick={() => setSelectedIds(new Set())}
-                                    className="px-3 py-2 text-muted-foreground hover:text-foreground hover:bg-background/50 rounded-lg transition-colors"
-                                >
-                                    Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    )}
+            {/* AFIP BULK ACTIONS REMOVED */}
+        </div>
+    )}
 
-                    {/* --- Listado --- */}
+    {/* --- Listado --- */}
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -497,16 +377,7 @@ export default function SalesClient({ initialSales }: Props) {
 
                                             {/* Status Badge - Shows if invoiced */}
                                             <div className="flex gap-4 items-center md:items-end justify-center">
-                                                {sale.facturaId ? (
-                                                    <div className="flex items-center gap-1.5 px-3 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg text-xs font-bold border border-green-200 dark:border-green-900/50" title="Venta ya facturada ante AFIP">
-                                                        <FaFileInvoiceDollar size={14} /> Facturado
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-xs text-muted-foreground italic h-6">
-                                                        {/* Spacer or customized 'Pendiente' badge if desired */}
-                                                    </div>
-                                                )}
-
+                                               {/* AFIP BADGE REMOVED */}
                                                     <button
                                                         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-colors ${expanded === sale.id
                                                             ? "bg-primary/10 text-primary"
@@ -538,25 +409,7 @@ export default function SalesClient({ initialSales }: Props) {
                                                     <FaShoppingBag className="text-primary" /> Productos Vendidos
                                                 </h3>
                                                 <div className="flex items-center gap-2">
-                                                    {/* Facturar Button - Only if not Invoiced */}
-                                                    {!sale.facturaId ? (
-                                                        <button
-                                                            onClick={() => handleFacturar(sale)}
-                                                            disabled={facturandoId === sale.id}
-                                                            className={`flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/40 rounded-lg text-sm font-bold transition-colors ${facturandoId === sale.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        >
-                                                            {facturandoId === sale.id ? <FaSpinner className="animate-spin" /> : <FaFileInvoiceDollar />}
-                                                            {facturandoId === sale.id ? 'Facturando...' : 'Facturar (AFIP)'}
-                                                        </button>
-                                                    ) : (
-                                                        /* View Invoice Button - Only if Invoiced */
-                                                        <button
-                                                            onClick={() => router.push(`/facturas/${sale.facturaId}`)}
-                                                            className="flex items-center gap-2 px-3 py-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg text-sm font-bold transition-colors"
-                                                        >
-                                                            <FaFileInvoiceDollar /> Ver Factura
-                                                        </button>
-                                                    )}
+                                                    {/* AFIP ACTIONS REMOVED */}
 
                                                     <button
                                                         onClick={() => handlePrintTicket(sale)}
@@ -631,77 +484,7 @@ export default function SalesClient({ initialSales }: Props) {
                 </div>
             )}
 
-            {/* Modal de Facturación */}
-            {showBillingModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-card w-full max-w-md rounded-2xl shadow-xl border border-border flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-border">
-                            <h3 className="text-xl font-bold text-card-foreground">Generar Factura{isBulkBilling ? "s" : ""} AFIP</h3>
-                            <p className="text-muted-foreground text-sm mt-1">Seleccione el tipo de comprobante y destinatario.</p>
-                        </div>
-
-                        <div className="p-6 space-y-4 overflow-y-auto">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Tipo de Factura</label>
-                                <select
-                                    className="w-full p-3 rounded-xl bg-input border border-input outline-none focus:border-primary"
-                                    value={billingData.cbteTipo}
-                                    onChange={(e) => setBillingData({ ...billingData, cbteTipo: Number(e.target.value) })}
-                                >
-                                    <option value={11}>Factura C (Consumidor Final)</option>
-                                    <option value={6}>Factura B (Resp. Inscripto a Cons. Final/Exento)</option>
-                                    <option value={1}>Factura A (Resp. Inscripto a Resp. Inscripto)</option>
-                                </select>
-                            </div>
-
-                            {billingData.cbteTipo !== 11 && (
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg text-sm text-blue-600 dark:text-blue-400">
-                                    ℹ️ Para Factura A o B es obligatorio ingresar DNI o CUIT.
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Tipo de Documento</label>
-                                <select
-                                    className="w-full p-3 rounded-xl bg-input border border-input outline-none focus:border-primary"
-                                    value={billingData.docTipo}
-                                    onChange={(e) => setBillingData({ ...billingData, docTipo: Number(e.target.value) })}
-                                >
-                                    <option value={99}>Sin Identificar (Solo Factura C &lt; Límite)</option>
-                                    <option value={96}>DNI (96)</option>
-                                    <option value={80}>CUIT (80)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-2">Número de Documento</label>
-                                <input
-                                    type="number"
-                                    className="w-full p-3 rounded-xl bg-input border border-input outline-none focus:border-primary"
-                                    placeholder="Ingrese DNI o CUIT sin guiones"
-                                    value={billingData.docNro}
-                                    onChange={(e) => setBillingData({ ...billingData, docNro: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="p-6 border-t border-border flex justify-end gap-3 bg-muted/20 rounded-b-2xl">
-                            <button
-                                onClick={() => setShowBillingModal(false)}
-                                className="px-4 py-2 hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={confirmFacturar}
-                                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm font-medium"
-                            >
-                                Emitir Factura{isBulkBilling ? "s" : ""}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* AFIP MODAL REMOVED */}
 
             <CustomAlert
                 isOpen={alertProps.isOpen}

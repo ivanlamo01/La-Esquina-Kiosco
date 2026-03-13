@@ -721,43 +721,9 @@ function Cart() {
     };
   }, []);
 
-  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  /* AFIP BILLING LOGIC REMOVED */
 
-  const handleGenerateInvoice = async () => {
-    if (!completedSale) return;
-    setGeneratingInvoice(true);
-    try {
-      const res = await fetch("/api/afip/facturar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          importe: Number(completedSale.total),
-          items: completedSale.products,
-          docTipo: 99, // Consumidor Final default
-          docNro: 0,
-          cbteTipo: 11, // Factura C default
-          concepto: 1,
-          saleId: completedSale.id // Link invoice to sale
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al facturar");
-
-      if (data.data && data.data.id) {
-        router.push(`/facturas/${data.data.id}`);
-      } else {
-        showAlert("warning", "Factura creada pero no se recibió ID.");
-      }
-
-    } catch (e: unknown) {
-      console.error(e);
-      const err = e as Error;
-      showAlert("danger", "Error al generar factura: " + err.message);
-    } finally {
-      setGeneratingInvoice(false);
-    }
-  };
+  /* AFIP BILLING LOGC REMOVED */
 
   const calculateTotal = useCallback(() => {
     const total = cart.reduce(
@@ -1182,7 +1148,6 @@ function Cart() {
               <button
                 onClick={() => setShowPrintModal(false)}
                 className="py-3 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-bold transition-colors"
-                disabled={generatingInvoice}
               >
                 Cerrar
               </button>
@@ -1190,24 +1155,12 @@ function Cart() {
               <button
                 onClick={handlePrintTicket}
                 className="py-3 bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-bold transition-colors shadow-md flex items-center justify-center gap-2"
-                disabled={generatingInvoice || isPrintingTicket}
+                disabled={isPrintingTicket}
               >
                 <FaPrint /> {isPrintingTicket ? "Abriendo impresión..." : "Imprimir Ticket"}
               </button>
 
-              {/* TODO: Habilitar cuando se active el módulo de Facturación
-              <button
-                onClick={handleGenerateInvoice}
-                className="py-3 bg-blue-600 text-white hover:bg-blue-700 col-span-1 md:col-span-2 rounded-xl font-bold transition-colors shadow-md flex items-center justify-center gap-2"
-                disabled={generatingInvoice}
-              >
-                {generatingInvoice ? "Generando..." : (
-                  <>
-                    <FaFileInvoiceDollar /> Facturar (AFIP)
-                  </>
-                )}
-              </button>
-              */}
+              {/* AFIP ACTIONS REMOVED */}
             </div>
           </div>
 

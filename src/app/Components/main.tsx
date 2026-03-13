@@ -256,27 +256,25 @@ const Main: React.FC = () => {
         <div className="mb-6 text-primary animate-pulse font-medium">Cargando datos...</div>
       )}
 
-      {/* Hero Logo Area (Visible only when some modules are disabled to fill space) */}
-      {!ACTIVE_MODULES.ventas && !ACTIVE_MODULES.graficos && (
-        <div className="flex justify-center items-center w-full mb-12 mt-0 h-40 md:h-64 lg:h-80 relative overflow-visible">
-           <div className="animate-bounce-in-right h-full flex flex-col items-center justify-start">
-             <div className="relative group">
-                <div 
-                  className="absolute inset-0 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--glow-color) 20%, transparent)' }}
-                ></div>
-                 <Image
-                  src="/Logo.png"
-                  alt="Logo La Esquina 24hs"
-                  width={512}
-                  height={512}
-                  sizes="(max-width: 768px) 160px, (max-width: 1024px) 256px, 320px"
-                  className="h-40 md:h-64 lg:h-80 w-auto drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500 origin-center logo-glow"
-                 />
-               </div>
-           </div>
-        </div>
-      )}
+      {/* Hero Logo Area - Always visible now */}
+      <div className="flex justify-center items-center w-full mb-12 mt-0 h-40 md:h-64 lg:h-80 relative overflow-visible">
+         <div className="animate-bounce-in-right h-full flex flex-col items-center justify-start">
+           <div className="relative group">
+              <div 
+                className="absolute inset-0 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--glow-color) 20%, transparent)' }}
+              ></div>
+               <Image
+                src="/Logo.png"
+                alt="Logo La Esquina 24hs"
+                width={512}
+                height={512}
+                sizes="(max-width: 768px) 160px, (max-width: 1024px) 256px, 320px"
+                className="h-40 md:h-64 lg:h-80 w-auto drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500 origin-center logo-glow"
+               />
+             </div>
+         </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -491,71 +489,7 @@ const Main: React.FC = () => {
               )}
             </div>
           </div>
-
-          {/* Top Products Section */}
-          {ACTIVE_MODULES.ventas && (
-            <div className="bg-card border border-border p-6 rounded-2xl shadow-sm backdrop-blur-sm flex flex-col h-[500px]">
-              <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-                <span className="w-2 h-6 bg-green-500 rounded-full"></span>
-                Top Productos
-              </h2>
-
-              <div className="flex-1 overflow-hidden">
-                {topProducts.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-muted-foreground border-b border-border">
-                          <th className="text-left py-3 px-4 font-medium">Producto</th>
-                          <th className="text-center py-3 px-4 font-medium">Vendidos</th>
-                          <th className="text-right py-3 px-4 font-medium">% Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {topProducts.map((product, i) => {
-                          const percentage = totalWeeklyQuantity
-                            ? ((product.quantity / totalWeeklyQuantity) * 100).toFixed(1)
-                            : 0;
-                          return (
-                            <tr key={i} className="hover:bg-muted/50 transition-colors group">
-                              <td className="py-3 px-4">
-                                <div className="flex items-center gap-3">
-                                  <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${i === 0 ? 'bg-yellow-500 text-black' :
-                                    i === 1 ? 'bg-gray-400 text-black' :
-                                      i === 2 ? 'bg-orange-700 text-white' :
-                                        'bg-secondary text-muted-foreground'
-                                    }`}>
-                                    {i + 1}
-                                  </span>
-                                  <span className="font-medium text-foreground group-hover:text-primary transition-colors">{product.title}</span>
-                                </div>
-                              </td>
-                              <td className="py-3 px-4 text-center font-mono text-muted-foreground">{product.quantity}</td>
-                              <td className="py-3 px-4 text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  <span className="text-muted-foreground text-xs">{percentage}%</span>
-                                  <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden">
-                                    <div
-                                      className="h-full bg-primary rounded-full"
-                                      style={{ width: `${percentage}%` }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                    <p>No hay datos de ventas esta semana.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Top Products Section REMOVED */}
         </div>
 
         <div className="hidden">

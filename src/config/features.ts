@@ -3,7 +3,7 @@ export const ACTIVE_MODULES = {
   pos: true,
   deudores: false,
   usuarios: false,
-  ventas: false,
+  ventas: true,
   facturacion: false,
   facturas: false,
   gastos: false,
