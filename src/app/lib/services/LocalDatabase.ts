@@ -175,7 +175,7 @@ class CapacitorDB implements DatabaseService {
 
         try {
             console.log('Initializing Capacitor SQLite...');
-            this.db = await this.sqlite.createConnection('almacen_mgd', false, 'no-encryption', 1, false);
+            this.db = await this.sqlite.createConnection('la_esquina_kiosco', false, 'no-encryption', 1, false);
             
             await this.db.open();
 

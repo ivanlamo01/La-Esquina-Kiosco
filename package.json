@@ -19,8 +19,8 @@
   },
   "main": "electron/main.js",
   "build": {
-    "appId": "com.almacenmgd.desktop",
-    "productName": "Almacen MGD",
+    "appId": "com.laesquinakiosco.desktop",
+    "productName": "La Esquina Kiosco",
     "npmRebuild": false,
     "directories": {
       "output": "dist"
@@ -35,7 +35,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Almacen MGD",
+      "shortcutName": "La Esquina Kiosco",
       "runAfterFinish": true
     },
     "win": {
@@ -45,7 +45,7 @@
       {
         "provider": "github",
         "owner": "ivanlamo01",
-        "repo": "Lo-de-Marta"
+        "repo": "la-esquina-kiosco"
       }
     ]
   },

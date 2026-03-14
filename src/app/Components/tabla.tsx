@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent, useRef } from "react";
 import { FaCogs, FaQuestionCircle, FaSearch, FaTimes, FaTrash } from "react-icons/fa";
 
 import Producto from "./Producto";
@@ -27,6 +27,9 @@ const Tabla: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterCategory, setFilterCategory] = useState<string>("");
   const [filterStock, setFilterStock] = useState<string>("todos"); // todos, bajo, sin
+  const [sortBy, setSortBy] = useState<string>("default");
+  const [categorySearchTerm, setCategorySearchTerm] = useState<string>("");
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState<boolean>(false);
 
   // --- Paginación ---
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -38,6 +41,7 @@ const Tabla: React.FC = () => {
 
   // --- Categorías Mapping ---
   const [categoriasMap, setCategoriasMap] = useState<Record<string, string>>({});
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // --- Modales ---
   const [showProductForm, setShowProductForm] = useState(false);
@@ -142,7 +146,7 @@ const Tabla: React.FC = () => {
 
   // 2. LÓGICA DE FILTRADO (Se ejecuta cuando cambia algun filtro o la lista base)
   useEffect(() => {
-    let result = allProductos;
+    let result = [...allProductos];
 
     // A. Filtro por Texto (Nombre O Código de Barras)
     if (searchTerm) {
@@ -165,10 +169,41 @@ const Tabla: React.FC = () => {
       result = result.filter(p => p.stock === 0);
     }
 
+    // D. Ordenamiento
+    if (sortBy === "name-asc") {
+      result.sort((a, b) => a.title.localeCompare(b.title, "es", { sensitivity: "base" }));
+    } else if (sortBy === "name-desc") {
+      result.sort((a, b) => b.title.localeCompare(a.title, "es", { sensitivity: "base" }));
+    } else if (sortBy === "price-asc") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-desc") {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "stock-asc") {
+      result.sort((a, b) => a.stock - b.stock);
+    } else if (sortBy === "stock-desc") {
+      result.sort((a, b) => b.stock - a.stock);
+    }
+
     setFilteredProductos(result);
     setCurrentPage(1); // Volver a pág 1 al filtrar
     setSelectedIds(new Set()); // Limpiar selección al filtrar
-  }, [searchTerm, filterCategory, filterStock, allProductos]);
+  }, [searchTerm, filterCategory, filterStock, sortBy, allProductos]);
+
+  useEffect(() => {
+    if (!isCategoryDropdownOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isCategoryDropdownOpen]);
 
   // --- Paginación Lógica ---
   const indexOfLastProduct = currentPage * productsPerPage;
@@ -410,6 +445,16 @@ const Tabla: React.FC = () => {
     );
   };
 
+  const sortedCategoryEntries = Object.entries(categoriasMap).sort((a, b) =>
+    a[1].localeCompare(b[1], "es", { sensitivity: "base" })
+  );
+
+  const filteredCategoryEntries = sortedCategoryEntries.filter(([id, name]) => {
+    const term = categorySearchTerm.trim().toLowerCase();
+    if (!term) return true;
+    return name.toLowerCase().includes(term) || id === filterCategory;
+  });
+
   return (
     <div className="w-full">
       <Loading loading={loading} />
@@ -450,7 +495,7 @@ const Tabla: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
 
-          <div id="search-input" className="md:col-span-6 relative">
+          <div id="search-input" className="md:col-span-5 relative">
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
@@ -463,26 +508,73 @@ const Tabla: React.FC = () => {
 
           {/* 2. Filtro Categoría */}
           <div className="md:col-span-3 flex gap-2">
-            <div className="relative w-full">
-              <select
+            <div ref={categoryDropdownRef} className="relative w-full">
+              <button
                 id="filter-category"
-                className={`w-full h-full ${filterCategory ? 'pr-10' : 'pr-6'} pl-4 py-3 bg-input border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground appearance-none transition-all`}
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
+                type="button"
+                onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
+                className={`w-full h-full ${filterCategory ? 'pr-10' : 'pr-6'} pl-4 py-3 bg-input border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer text-foreground transition-all text-left`}
+                aria-haspopup="listbox"
+                aria-expanded={isCategoryDropdownOpen}
               >
-                <option className="m-4" value="">Todas las Categorías</option>
-                {Object.entries(categoriasMap).map(([id, name]) => (
-                  <option className="bg-background text-foreground" key={id} value={id}>{name}</option>
-                ))}
-              </select>
+                {filterCategory ? categoriasMap[filterCategory] || "Todas las Categorías" : "Todas las Categorías"}
+              </button>
               {filterCategory && (
                 <button
+                  type="button"
                   onClick={() => setFilterCategory("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors p-1"
                   title="Quitar filtro de categoría"
                 >
                   <FaTimes />
                 </button>
+              )}
+
+              {isCategoryDropdownOpen && (
+                <div className="absolute z-30 mt-2 w-full rounded-xl border border-border bg-card shadow-xl p-2">
+                  <div className="relative mb-2">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm" />
+                    <input
+                      type="text"
+                      value={categorySearchTerm}
+                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                      placeholder="Buscar categoría..."
+                      className="w-full pl-9 pr-3 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-primary outline-none text-sm"
+                    />
+                  </div>
+
+                  <ul className="max-h-56 overflow-auto" role="listbox" aria-label="Categorías">
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterCategory("");
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${!filterCategory ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'}`}
+                      >
+                        Todas las Categorías
+                      </button>
+                    </li>
+                    {filteredCategoryEntries.map(([id, name]) => (
+                      <li key={id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFilterCategory(id);
+                            setIsCategoryDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${filterCategory === id ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'}`}
+                        >
+                          {name}
+                        </button>
+                      </li>
+                    ))}
+                    {filteredCategoryEntries.length === 0 && (
+                      <li className="px-3 py-2 text-sm text-muted-foreground">No se encontraron categorías</li>
+                    )}
+                  </ul>
+                </div>
               )}
             </div>
             {login && filterCategory && (
@@ -496,10 +588,10 @@ const Tabla: React.FC = () => {
             )}
           </div>
 
-          <div className="md:col-span-3">
+          <div className="md:col-span-2">
             <select
               id="filter-stock"
-              className={`w-full h-full pl-4 pr-6 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer appearance-none font-medium
+              className={`w-full pl-4 pr-6 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary outline-none cursor-pointer appearance-none font-medium
                         ${filterStock === 'bajo' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
                   filterStock === 'sin' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-input text-foreground'}
                     `}
@@ -509,6 +601,23 @@ const Tabla: React.FC = () => {
               <option value="todos">Stock: Todos</option>
               <option value="bajo">Stock Bajo (1-5)</option>
               <option value="sin">Sin Stock (0)</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <select
+              id="sort-products"
+              className="w-full pl-4 pr-6 py-3 border border-border rounded-xl bg-input text-foreground focus:ring-2 focus:ring-primary outline-none cursor-pointer appearance-none"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="default">Orden: Predeterminado</option>
+              <option value="name-asc">Nombre: A-Z</option>
+              <option value="name-desc">Nombre: Z-A</option>
+              <option value="price-asc">Precio: Menor a Mayor</option>
+              <option value="price-desc">Precio: Mayor a Menor</option>
+              <option value="stock-asc">Stock: Menor a Mayor</option>
+              <option value="stock-desc">Stock: Mayor a Menor</option>
             </select>
           </div>
         </div>
@@ -624,7 +733,7 @@ const Tabla: React.FC = () => {
             </div>
             <select className="w-full p-3 border border-border rounded-xl bg-input text-foreground" value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })} required >
               <option value="">Seleccionar categoría</option>
-              {Object.entries(categoriasMap).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+              {sortedCategoryEntries.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
             </select>
             <label>
               Codigo de Barras
@@ -685,7 +794,7 @@ const Tabla: React.FC = () => {
               Categoría
               <select className="w-full p-3 border border-border rounded-xl bg-input text-foreground" value={editingProduct.category} onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })} required >
                 <option value="">Seleccionar categoría</option>
-                {Object.entries(categoriasMap).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                {sortedCategoryEntries.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
               </select>
             </label>
             <label>

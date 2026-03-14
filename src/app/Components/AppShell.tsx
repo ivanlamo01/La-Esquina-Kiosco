@@ -67,7 +67,7 @@ function AppShellClient({ children }: { children: React.ReactNode }) {
                 const catsSnap = await getDocs(collection(db, 'Categorias'));
                 for (const cDoc of catsSnap.docs) {
                     const data = cDoc.data();
-                    let name = data.name || '';
+                    const name = data.name || '';
                     
                     // Force rename Almacen to Variables
                     if (name.toLowerCase() === 'almacen') {

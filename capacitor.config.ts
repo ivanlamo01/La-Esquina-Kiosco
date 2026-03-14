@@ -1,11 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.almacenmgd.app',
-  appName: 'Almacen MGD',
+  appId: 'com.laesquinakiosco.app',
+  appName: 'La Esquina Kiosco',
   webDir: 'out',
   server: {
-    url: 'https://lodemarta--la-esquina-kiosco.us-central1.hosted.app',
+    url: 'https://ber--la-esquina-kiosco.us-central1.hosted.app',
     cleartext: true
   },
   plugins: {
