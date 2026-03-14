@@ -625,14 +625,13 @@ function Cart() {
       };
 
       // Guardar venta si no es deuda
-      /* TODO: Habilitar cuando se active el historial de ventas
       if (paymentMethod !== "Deuda") {
         const saleData = {
           total: total,
           items: cart.map((item) => ({
             title: item.data.title,
             description: item.customDescription || "",
-            price: Number(item.customPrice ?? item.data.price ?? 0), // Guardar como número en el array
+            price: Number(item.customPrice ?? item.data.price ?? 0),
             quantity: item.quantity,
           })),
           paymentMethod,
@@ -642,11 +641,11 @@ function Cart() {
         if (result.success && result.id) {
           ticketSale.id = result.id;
         } else {
-          // Handle error if needed
           console.error("Error saving sale:", result.error);
+          showAlert("danger", "No se pudo guardar la venta. Verificá tu conexión e intentá nuevamente.");
+          return;
         }
       }
-      */
 
       // Guardar deuda usando debtorService (Web y Native)
       /* TODO: Habilitar cuando se active el módulo de Deudores
