@@ -308,20 +308,18 @@ const Main: React.FC = () => {
                 <span className="w-2 h-6 bg-primary rounded-full"></span>
                 Notas Importantes
               </h2>
-              {isAdmin && (
-                <button
-                  onClick={() => setIsAddingNote(!isAddingNote)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isAddingNote
-                    ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
-                    : "bg-primary text-primary-foreground hover:opacity-90 hover:scale-110"
-                    }`}
-                >
-                  {isAddingNote ? <FaTimes /> : "+"}
-                </button>
-              )}
+              <button
+                onClick={() => setIsAddingNote(!isAddingNote)}
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isAddingNote
+                  ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                  : "bg-primary text-primary-foreground hover:opacity-90 hover:scale-110"
+                  }`}
+              >
+                {isAddingNote ? <FaTimes /> : "+"}
+              </button>
             </div>
 
-            {isAddingNote && isAdmin && (
+            {isAddingNote && (
               <form onSubmit={handleAddNote} className="mb-6 p-4 bg-secondary/50 border border-border rounded-xl animate-slide-down">
                 <input
                   type="text"

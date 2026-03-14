@@ -42,7 +42,7 @@ const ModalInput: React.FC<ModalInputProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
             <div className="bg-card border border-border text-card-foreground w-full max-w-md rounded-xl shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
                 <div className="p-6 space-y-4">
                     <h3 className="text-xl font-bold tracking-tight">{title}</h3>
