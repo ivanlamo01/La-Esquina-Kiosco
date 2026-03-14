@@ -1164,11 +1164,15 @@ function Cart() {
           </div>
 
           {/* Template hidden from UI but visible for Print */}
-          <div className="hidden print:block absolute top-0 left-0 w-full bg-white h-screen">
+          <div className="ticket-print-root hidden print:block absolute top-0 left-0 w-full bg-white h-screen">
             <style>{`
                     @media print {
+                        body * { visibility: hidden !important; }
+                        .ticket-print-root, .ticket-print-root * { visibility: visible !important; }
+                        .ticket-print-root { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; }
                         nav, header, aside, .sidebar, footer { display: none !important; }
                         main { margin: 0 !important; padding: 0 !important; }
+                        * { box-shadow: none !important; text-shadow: none !important; filter: none !important; }
                         @page { margin: 0; size: auto; }
                     }
                 `}</style>
