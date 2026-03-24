@@ -7,7 +7,8 @@ export interface SaleData {
     total: number;
     items: Product[];
     paymentMethod: string;
-
+    efectivoIngresado?: number;
+    vuelto?: number;
 }
 
 /**
@@ -75,6 +76,8 @@ export class SaleService {
                 total: String(saleData.total),
                 products: saleData.items, // Asumimos que items ya viene con la estructura correcta o se guarda directo
                 paymentMethod: saleData.paymentMethod,
+                efectivoIngresado: saleData.efectivoIngresado || null,
+                vuelto: saleData.vuelto || null,
                 timestamp: new Date(),
             };
 
@@ -104,6 +107,8 @@ export class SaleService {
                     total: Number(item.total),
                     paymentMethod: item.payment_method || item.paymentMethod,
                     products: (item.items as unknown as Product[]) || [],
+                    efectivoIngresado: item.efectivoIngresado || undefined,
+                    vuelto: item.vuelto || undefined,
                     // Mock Firestore Timestamp for compatibility in native mode
                     date: {
                         seconds: Math.floor(ts / 1000),
@@ -148,6 +153,8 @@ export class SaleService {
                         total: Number(data.total) || 0,
                         date: data.timestamp, // Firestore Timestamp object
                         paymentMethod: data.paymentMethod ?? "Desconocido",
+                        efectivoIngresado: data.efectivoIngresado || undefined,
+                        vuelto: data.vuelto || undefined,
                         products,
                         facturaId: (data as any).facturaId || null // Ensure this is mapped!
                     };
@@ -198,6 +205,8 @@ export class SaleService {
                         total: Number(data.total) || 0,
                         date: data.timestamp,
                         paymentMethod: data.paymentMethod ?? "Desconocido",
+                        efectivoIngresado: data.efectivoIngresado || undefined,
+                        vuelto: data.vuelto || undefined,
                         products,
                         facturaId: (data as any).facturaId || null // Ensure this is mapped!
                     };
@@ -266,6 +275,8 @@ export class SaleService {
                         total: String(sale.total),
                         products: sale.items, 
                         paymentMethod: sale.payment_method || sale.paymentMethod, // Handle both snake_case (sqlite) and camelCase
+                        efectivoIngresado: sale.efectivoIngresado || null,
+                        vuelto: sale.vuelto || null,
                         timestamp: new Date(sale.timestamp || sale.date), // SQLite guarda ms o string iso
                         syncedFromElectron: true
                     };
@@ -331,6 +342,8 @@ export class SaleService {
                     total: Number(data.total) || 0,
                     products: (data.products ?? []) as unknown as IDBSaleItem[], // Casting to match IDBSyncSale structure which accepts IDBSaleItem[]
                     paymentMethod: data.paymentMethod ?? "Desconocido",
+                    efectivoIngresado: data.efectivoIngresado || undefined,
+                    vuelto: data.vuelto || undefined,
                     timestamp: data.timestamp?.toMillis() || Date.now() // Convert Firebase Timestamp to ms
                 };
             });

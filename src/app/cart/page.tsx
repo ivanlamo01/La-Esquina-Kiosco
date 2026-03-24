@@ -64,8 +64,8 @@ function Cart() {
   const [barcode, setBarcode] = useState("");
   const [title, setTitle] = useState("");
   const [total, setTotal] = useState(0);
-  const [showModal, setShowModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [efectivoIngresado, setEfectivoIngresado] = useState("");
   const [debtorName, setDebtorName] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -100,12 +100,6 @@ function Cart() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
   // ---------------------------
-
-  // Print Modal State
-  const [showPrintModal, setShowPrintModal] = useState(false);
-  const [completedSale, setCompletedSale] = useState<Sale | null>(null);
-  const [isPrintingTicket, setIsPrintingTicket] = useState(false);
-  const printTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Local Catalog State (Client-side Search Index)
   const [catalog, setCatalog] = useState<(Product & { type: "product" | "promotion" })[]>([]);
@@ -471,9 +465,6 @@ function Cart() {
     updateCartQuantity(id, newQuantity);
   };
 
-  const handlePurchaseConfirmation = () => {
-    setShowModal(true);
-  };
 
   const triggerAlert = (
     title: string,
@@ -521,26 +512,11 @@ function Cart() {
     */
 
     if (paymentMethod === "Efectivo") {
-      const efect = await showPrompt(
-        "Pago en Efectivo",
-        `Total a pagar: $${total.toFixed(2)}. ¿Con cuánto abona el cliente?`,
-        "",
-        "number"
-      );
-
-      if (efect === null) {
-        // Cancelado por el usuario
+      const efect = parseFloat(efectivoIngresado);
+      if (isNaN(efect) || efect < total) {
+        showAlert("danger", "Monto ingresado inválido o insuficiente para pago en efectivo.");
         return;
       }
-      const efectivoIngresado = parseFloat(efect);
-      if (isNaN(efectivoIngresado) || efectivoIngresado < total) {
-        showAlert("danger", "Monto ingresado inválido o insuficiente.");
-        return;
-      }
-      const change = efectivoIngresado - total;
-
-      // Mostrar vuelto con CustomAlert (esperamos confirmación)
-      await triggerAlert("Vuelto", `El vuelto es: $${change.toFixed(2)}`, "info");
     }
 
     try {
@@ -608,24 +584,21 @@ function Cart() {
         );
       }
 
-      // 🧾 Preparar objeto para el ticket
-      const ticketProducts = cart.map((item) => ({
-        title: item.data.title,
-        description: item.customDescription || "",
-        price: Number(item.customPrice ?? item.data.price ?? 0),
-        quantity: item.quantity,
-      }));
-
-      const ticketSale: Sale = {
-        id: "PENDIENTE", // Se actualizará si se guarda en sales
-        total: total,
-        date: Timestamp.fromDate(new Date()),
-        paymentMethod: paymentMethod,
-        products: ticketProducts
-      };
-
       // Guardar venta si no es deuda
       if (paymentMethod !== "Deuda") {
+        let efectivo: number | undefined;
+        let vueltoFinal: number | undefined;
+
+        if (paymentMethod === "Efectivo") {
+          efectivo = parseFloat(efectivoIngresado);
+          if (!isNaN(efectivo) && efectivo >= total) {
+            vueltoFinal = efectivo - total;
+          } else {
+            efectivo = undefined;
+            vueltoFinal = undefined;
+          }
+        }
+
         const saleData = {
           total: total,
           items: cart.map((item) => ({
@@ -635,12 +608,12 @@ function Cart() {
             quantity: item.quantity,
           })),
           paymentMethod,
+          ...(efectivo !== undefined && { efectivoIngresado: efectivo }),
+          ...(vueltoFinal !== undefined && { vuelto: vueltoFinal }),
         };
 
         const result = await saleService.save(saleData);
-        if (result.success && result.id) {
-          ticketSale.id = result.id;
-        } else {
+        if (!result.success || !result.id) {
           console.error("Error saving sale:", result.error);
           showAlert("danger", "No se pudo guardar la venta. Verificá tu conexión e intentá nuevamente.");
           return;
@@ -650,7 +623,6 @@ function Cart() {
       // Guardar deuda usando debtorService (Web y Native)
       /* TODO: Habilitar cuando se active el módulo de Deudores
       if (paymentMethod === "Deuda") {
-        ticketSale.paymentMethod = `Deuda: ${debtorName}`;
 
         const productsForDebt = cart.map((item) => ({
           title: item.data.title,
@@ -669,9 +641,6 @@ function Cart() {
       */
 
       clearCart();
-      // Guardar venta completada y mostrar modal de impresión
-      setCompletedSale(ticketSale);
-      setShowPrintModal(true);
 
       showAlert(
         "success",
@@ -685,40 +654,9 @@ function Cart() {
       );
     } finally {
       setLoading(false);
-      setShowModal(false);
       inputRef.current?.focus();
     }
   };
-
-  const handlePrintTicket = () => {
-    if (isPrintingTicket) return;
-
-    setIsPrintingTicket(true);
-    printTimeoutRef.current = setTimeout(() => {
-      window.print();
-    }, 300);
-  };
-
-  useEffect(() => {
-    const handleAfterPrint = () => {
-      setIsPrintingTicket(false);
-
-      if (printTimeoutRef.current) {
-        clearTimeout(printTimeoutRef.current);
-        printTimeoutRef.current = null;
-      }
-    };
-
-    window.addEventListener("afterprint", handleAfterPrint);
-
-    return () => {
-      window.removeEventListener("afterprint", handleAfterPrint);
-
-      if (printTimeoutRef.current) {
-        clearTimeout(printTimeoutRef.current);
-      }
-    };
-  }, []);
 
   /* AFIP BILLING LOGIC REMOVED */
 
@@ -930,20 +868,86 @@ function Cart() {
               <span className="text-muted-foreground">Total a Pagar</span>
               <span className="text-4xl font-extrabold text-primary">${total.toFixed(2)}</span>
             </div>
-            <div className="text-right text-xs text-muted-foreground mb-8">
+            <div className="text-right text-xs text-muted-foreground mb-6">
               {cart.length} items en el carrito
             </div>
 
+            <div className="mb-6 space-y-3">
+              <label className="block text-sm font-medium text-muted-foreground">Método de pago</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentMethod("Efectivo");
+                    setPaymentError(false);
+                  }}
+                  className={`py-2 rounded-xl border-2 font-bold transition-all ${
+                    paymentMethod === "Efectivo"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-transparent text-muted-foreground hover:border-primary/50"
+                  }`}
+                >
+                  Efectivo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentMethod("Transferencia");
+                    setPaymentError(false);
+                    setEfectivoIngresado("");
+                  }}
+                  className={`py-2 rounded-xl border-2 font-bold transition-all ${
+                    paymentMethod === "Transferencia"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-transparent text-muted-foreground hover:border-primary/50"
+                  }`}
+                >
+                  Transferencia
+                </button>
+              </div>
+              {paymentError && !paymentMethod && (
+                <p className="text-destructive text-sm flex items-center gap-2 mt-2">
+                  <FaExclamationCircle /> Seleccione un método
+                </p>
+              )}
+            </div>
+
+            {paymentMethod === "Efectivo" && (
+              <div className="mb-6 space-y-2 animate-fade-in bg-secondary/30 p-4 rounded-xl border border-border">
+                <label className="block text-sm font-medium text-foreground">¿Con cuánto abona?</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
+                  <input
+                    type="number"
+                    min={total > 0 ? total : 0}
+                    step="0.01"
+                    value={efectivoIngresado}
+                    onChange={(e) => setEfectivoIngresado(e.target.value)}
+                    className="w-full pl-8 p-3 bg-input border border-input rounded-xl text-foreground focus:border-primary outline-none font-bold text-lg cursor-text"
+                    placeholder="0.00"
+                  />
+                </div>
+                {parseFloat(efectivoIngresado) >= total && total > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Vuelto:</span>
+                    <span className="text-xl font-bold text-green-500">
+                      ${(parseFloat(efectivoIngresado) - total).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               id="confirm-sale-btn"
-              onClick={handlePurchaseConfirmation}
-              disabled={cart.length === 0}
+              onClick={confirmPurchase}
+              disabled={cart.length === 0 || loading}
               className={`w-full py-4 rounded-xl font-bold text-lg shadow-md transition-all transform active:scale-95 ${cart.length === 0
                 ? "bg-secondary text-muted-foreground cursor-not-allowed"
                 : "bg-primary text-primary-foreground hover:opacity-90 shadow-primary/20"
                 }`}
             >
-              Confirmar Compra ➔
+              {loading ? "Procesando..." : "Confirmar Compra ➔"}
             </button>
           </div>
 
@@ -981,79 +985,6 @@ function Cart() {
           )}
         </div>
       </div>
-
-      {/* --- Modal confirmación --- */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50 p-4 animate-fade-in">
-          <div className="bg-card border border-border rounded-2xl p-8 w-full max-w-md shadow-2xl animate-scale-up">
-            <h3 className="text-2xl font-bold text-foreground mb-6">Confirmar Compra</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium text-muted-foreground">Método de pago</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full p-3 bg-input border border-input rounded-xl text-foreground focus:border-primary outline-none cursor-pointer"
-                >
-                  <option value="">Seleccione...</option>
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia">Transferencia</option>
-                  {/* TODO: Habilitar cuando se active el módulo de Deudores
-                  <option value="Deuda">Deuda (Cuenta Corriente)</option>
-                  */}
-                </select>
-              </div>
-
-              {paymentError && !paymentMethod && (
-                <p className="text-destructive text-sm flex items-center gap-2">
-                  <FaExclamationCircle /> Debe seleccionar un método de pago
-                </p>
-              )}
-
-              {/* TODO: Habilitar cuando se active el módulo de Deudores
-              {paymentMethod === "Deuda" && (
-                <div className="animate-fade-in">
-                  <label className="block mb-2 text-sm font-medium text-muted-foreground">
-                    Cliente / Deudor
-                  </label>
-                  <input
-                    type="text"
-                    value={debtorName}
-                    onChange={(e) => setDebtorName(e.target.value)}
-                    list="debtors-list"
-                    className="w-full p-3 bg-input border border-input rounded-xl text-foreground focus:border-primary outline-none"
-                    placeholder="Escribí el nombre..."
-                  />
-                  <datalist id="debtors-list">
-                    {debtors.map((d) => (
-                      <option key={d.id} value={d.name} />
-                    ))}
-                  </datalist>
-                </div>
-              )}
-              */}
-            </div>
-
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-3 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-bold transition-colors"
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmPurchase}
-                className="flex-1 py-3 bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-bold transition-colors shadow-md"
-                disabled={loading}
-              >
-                {loading ? "Procesando..." : "Confirmar ($" + total.toFixed(2) + ")"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* --- Custom Alert Modal --- */}
       <CustomAlert
@@ -1127,56 +1058,6 @@ function Cart() {
                 Cerrar
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* 🧾 Modal de Impresión de Ticket */}
-      {showPrintModal && completedSale && (
-        <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-100 p-4 animate-fade-in print:bg-white print:p-0">
-          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl animate-scale-up text-center print:hidden">
-            <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-              <FaPrint />
-            </div>
-            <h3 className="text-2xl font-bold text-foreground mb-2">¡Venta Exitosa!</h3>
-            <p className="text-muted-foreground mb-6">
-              ¿Desea imprimir el ticket de la venta?
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                onClick={() => setShowPrintModal(false)}
-                className="py-3 bg-secondary hover:bg-secondary/80 text-foreground rounded-xl font-bold transition-colors"
-              >
-                Cerrar
-              </button>
-
-              <button
-                onClick={handlePrintTicket}
-                className="py-3 bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-bold transition-colors shadow-md flex items-center justify-center gap-2"
-                disabled={isPrintingTicket}
-              >
-                <FaPrint /> {isPrintingTicket ? "Abriendo impresión..." : "Imprimir Ticket"}
-              </button>
-
-              {/* AFIP ACTIONS REMOVED */}
-            </div>
-          </div>
-
-          {/* Template hidden from UI but visible for Print */}
-          <div className="ticket-print-root hidden print:block absolute top-0 left-0 w-full bg-white h-screen">
-            <style>{`
-                    @media print {
-                        body * { visibility: hidden !important; }
-                        .ticket-print-root, .ticket-print-root * { visibility: visible !important; }
-                        .ticket-print-root { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; }
-                        nav, header, aside, .sidebar, footer { display: none !important; }
-                        main { margin: 0 !important; padding: 0 !important; }
-                        * { box-shadow: none !important; text-shadow: none !important; filter: none !important; }
-                        @page { margin: 0; size: auto; }
-                    }
-                `}</style>
-            <TicketTemplate sale={completedSale} businessData={businessData} />
           </div>
         </div>
       )}

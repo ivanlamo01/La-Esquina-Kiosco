@@ -23,6 +23,8 @@ export interface IDBSaleInput {
     paymentMethod: string;
     date?: string;
     timestamp?: number;
+    efectivoIngresado?: number;
+    vuelto?: number;
 }
 
 export interface IDBSale {
@@ -34,6 +36,8 @@ export interface IDBSale {
     synced: number;
     firebaseId?: string;
     payment_method?: string; // Raw column name
+    efectivoIngresado?: number;
+    vuelto?: number;
 }
 
 export interface IDBSyncSale {
@@ -42,6 +46,8 @@ export interface IDBSyncSale {
     products: IDBSaleItem[] | string;
     paymentMethod: string;
     timestamp: number;
+    efectivoIngresado?: number;
+    vuelto?: number;
 }
 
 export interface IDBCategory {
@@ -204,7 +210,9 @@ class CapacitorDB implements DatabaseService {
                     items TEXT NOT NULL,
                     paymentMethod TEXT,
                     synced INTEGER DEFAULT 0,
-                    firebaseId TEXT
+                    firebaseId TEXT,
+                    efectivoIngresado REAL,
+                    vuelto REAL
                 );
 
                 CREATE TABLE IF NOT EXISTS debtors (
@@ -233,14 +241,16 @@ class CapacitorDB implements DatabaseService {
 
     async saveSale(saleData: IDBSaleInput) {
         if (!this.db) await this.initialize();
-        const query = `INSERT INTO sales (date, total, items, paymentMethod, synced) VALUES (?, ?, ?, ?, 0)`;
+        const query = `INSERT INTO sales (date, total, items, paymentMethod, synced, efectivoIngresado, vuelto) VALUES (?, ?, ?, ?, 0, ?, ?)`;
         // Store timestamp (number) instead of ISO string for consistent range querying
         const timestamp = saleData.timestamp || Date.now();
         const values = [
             timestamp,
             saleData.total,
             JSON.stringify(saleData.items), // SQLite no soporta arrays/json nativos fácil
-            saleData.paymentMethod
+            saleData.paymentMethod,
+            saleData.efectivoIngresado || null,
+            saleData.vuelto || null
         ];
         
         const res = await this.db!.run(query, values);
@@ -387,15 +397,15 @@ class CapacitorDB implements DatabaseService {
                  // Update
                  await this.db!.run(`
                     UPDATE sales 
-                    SET date = ?, total = ?, items = ?, paymentMethod = ?, synced = 1
+                    SET date = ?, total = ?, items = ?, paymentMethod = ?, synced = 1, efectivoIngresado = ?, vuelto = ?
                     WHERE firebaseId = ?
-                 `, [dateVal, s.total, itemsStr, s.paymentMethod, s.id]);
+                 `, [dateVal, s.total, itemsStr, s.paymentMethod, s.efectivoIngresado || null, s.vuelto || null, s.id]);
              } else {
                  // Insert
                  await this.db!.run(`
-                    INSERT INTO sales (date, total, items, paymentMethod, synced, firebaseId)
-                    VALUES (?, ?, ?, ?, 1, ?)
-                 `, [dateVal, s.total, itemsStr, s.paymentMethod, s.id]);
+                    INSERT INTO sales (date, total, items, paymentMethod, synced, firebaseId, efectivoIngresado, vuelto)
+                    VALUES (?, ?, ?, ?, 1, ?, ?, ?)
+                 `, [dateVal, s.total, itemsStr, s.paymentMethod, s.id, s.efectivoIngresado || null, s.vuelto || null]);
              }
         }
         return { success: true, count: sales.length };

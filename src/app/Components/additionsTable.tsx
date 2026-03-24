@@ -13,6 +13,8 @@ import {
 import type { FirebaseError } from "firebase/app";
 import { db } from "../config/firebase";
 
+import { productService } from "../lib/services/productService";
+
 const isPermissionDeniedError = (error: unknown): boolean => {
   const firebaseError = error as FirebaseError;
   return firebaseError?.code === "permission-denied" || firebaseError?.code === "firestore/permission-denied";
@@ -24,35 +26,33 @@ const AdditionsTable: React.FC = () => {
   useEffect(() => {
     const loadAdditions = async () => {
       try {
-        const q = query(
-          collection(db, "Productos"),
-          orderBy("dateAdded", "desc"),
-          limit(5)
-        );
-        const querySnapshot = await getDocs(q);
+        const allProducts = await productService.getAll();
 
-        const additionsList: Addition[] = querySnapshot.docs.map((doc) => {
-          const data = doc.data();
+        const mapped = allProducts
+          .map((data: any) => {
+            let date = new Date(0);
+            if (data.dateAdded) {
+              if (data.dateAdded.toDate) {
+                date = data.dateAdded.toDate();
+              } else if (data.dateAdded.seconds) {
+                date = new Date(data.dateAdded.seconds * 1000);
+              } else {
+                date = new Date(data.dateAdded);
+              }
+            } else if (data.id) {
+               // Simple fallback: some timestamp extraction if id is predictable, otherwise date 0
+            }
 
-          let date: Date;
+            return {
+              title: data.title || data.name || "Sin título",
+              dateAdded: date,
+            };
+          })
+          .filter(p => p.dateAdded.getTime() > 0) // Filter out items with no explicit date Added
+          .sort((a, b) => b.dateAdded.getTime() - a.dateAdded.getTime())
+          .slice(0, 5);
 
-          if (data.dateAdded instanceof Timestamp) {
-            date = data.dateAdded.toDate(); // Firestore Timestamp
-          } else if (data.dateAdded instanceof Date) {
-            date = data.dateAdded; // Ya es Date
-          } else if (typeof data.dateAdded === "string") {
-            date = new Date(data.dateAdded); // ISO string
-          } else {
-            date = new Date(0); // Fallback
-          }
-
-          return {
-            title: data.title || "Sin título",
-            dateAdded: date,
-          };
-        });
-
-        setAdditions(additionsList);
+        setAdditions(mapped);
       } catch (error) {
         if (!isPermissionDeniedError(error)) {
           console.error("Error loading additions:", error);

@@ -118,7 +118,8 @@ export class ProductService {
                         stock: p.stock,
                         category: p.category || '',
                         Barcode: p.barcode || rawP.Barcode || '', 
-                        description: '' 
+                        description: '',
+                        dateAdded: rawP.dateAdded || new Date().toISOString()
                     };
 
                     // Add to Firestore
@@ -210,8 +211,9 @@ export class ProductService {
                     stock: product.stock,
                     category: product.category,
                     barcode: product.Barcode,
-                    name: product.name || product.title
-                };
+                    name: product.name || product.title,
+                    dateAdded: new Date().toISOString()
+                } as IDBProduct & { dateAdded?: string };
 
                 await database.addProduct(dbProd);
 
@@ -228,7 +230,11 @@ export class ProductService {
             }
         } else {
             try {
-                const docRef = await addDoc(collection(db, 'Productos'), product);
+                const productWithDate = {
+                    ...product,
+                    dateAdded: new Date().toISOString()
+                };
+                const docRef = await addDoc(collection(db, 'Productos'), productWithDate);
                 return { success: true, id: docRef.id };
             } catch (error) {
                 return { success: false, error: (error as Error).message };

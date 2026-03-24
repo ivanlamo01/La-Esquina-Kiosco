@@ -19,10 +19,7 @@ export default function SalesClient({ initialSales }: Props) {
     const router = useRouter();
     const [sales, setSales] = useState<SaleType[]>(initialSales);
     const [loading, setLoading] = useState(false);
-    // const [facturandoId, setFacturandoId] = useState<string | null>(null);
-    const [totalRange, setTotalRange] = useState(
-        initialSales.reduce((acc, s) => acc + s.total, 0)
-    );
+    const [filterPaymentMethod, setFilterPaymentMethod] = useState<string>("Todos");
     const [expanded, setExpanded] = useState<string | null>(null);
     const [saleToPrint, setSaleToPrint] = useState<SaleType | null>(null);
     const [isPrintingTicket, setIsPrintingTicket] = useState(false);
@@ -156,10 +153,6 @@ export default function SalesClient({ initialSales }: Props) {
             if (!res.success) throw new Error(res.error || "No se pudo eliminar");
 
             setSales(prev => prev.filter(s => s.id !== saleId));
-            setTotalRange(prev => {
-                const sale = sales.find(s => s.id === saleId);
-                return sale ? prev - sale.total : prev;
-            });
 
             if (expanded === saleId) setExpanded(null);
             showAlert("Éxito", "Venta eliminada correctamente.", "success");
@@ -172,10 +165,16 @@ export default function SalesClient({ initialSales }: Props) {
     const [currentPage, setCurrentPage] = useState(1);
     const salesPerPage = 10; // cantidad de ventas por página
 
+    const displayedSales = filterPaymentMethod === "Todos" 
+        ? sales 
+        : sales.filter(s => s.paymentMethod === filterPaymentMethod);
+        
+    const displayedTotal = displayedSales.reduce((acc, s) => acc + s.total, 0);
+
     // Calcular índice de los productos a mostrar
     const indexOfLastSale = currentPage * salesPerPage;
     const indexOfFirstSale = indexOfLastSale - salesPerPage;
-    const currentSales = sales.slice(indexOfFirstSale, indexOfLastSale);
+    const currentSales = displayedSales.slice(indexOfFirstSale, indexOfLastSale);
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -208,7 +207,6 @@ export default function SalesClient({ initialSales }: Props) {
 
         const filteredSales = await getSalesByRange(start, end);
         setSales(filteredSales);
-        setTotalRange(filteredSales.reduce((acc, s) => acc + s.total, 0));
         setCurrentPage(1); // resetear a la primera página
 
         setLoading(false);
@@ -239,8 +237,8 @@ export default function SalesClient({ initialSales }: Props) {
                         </div>
                         {/* Total Card Small */}
                         <div id="sales-total-card" className="bg-card border border-border px-6 py-3 rounded-xl flex flex-col items-end shadow-sm">
-                            <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total en Rango</span>
-                            <span className="text-2xl font-bold text-green-500">${totalRange.toFixed(2)}</span>
+                            <span className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total Filtrado</span>
+                            <span className="text-2xl font-bold text-green-500">${displayedTotal.toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -272,6 +270,22 @@ export default function SalesClient({ initialSales }: Props) {
                                         className="w-full pl-10 pr-4 py-3 rounded-xl bg-input border border-input text-foreground focus:border-primary outline-none transition-colors"
                                     />
                                 </div>
+                            </div>
+                            
+                            <div className="flex-1 w-full">
+                                <label className="text-sm font-medium text-muted-foreground mb-1 block">Método de Pago</label>
+                                <select 
+                                    className="w-full px-4 py-3 rounded-xl bg-input border border-input text-foreground focus:border-primary outline-none transition-colors appearance-none"
+                                    value={filterPaymentMethod}
+                                    onChange={(e) => {
+                                        setFilterPaymentMethod(e.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <option value="Todos">Todos</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                </select>
                             </div>
 
                             <button
@@ -452,6 +466,21 @@ export default function SalesClient({ initialSales }: Props) {
                                                     </tbody>
                                                 </table>
                                             </div>
+
+                                            {/* Detalles Pago Efectivo */}
+                                            {sale.paymentMethod === "Efectivo" && sale.efectivoIngresado !== undefined && (
+                                                <div className="mt-4 p-4 bg-secondary/50 rounded-xl border border-border flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-6 text-sm">
+                                                    <div className="flex items-center gap-2">
+                                                        <FaMoneyBillWave className="text-muted-foreground" />
+                                                        <span className="text-muted-foreground">Efectivo Ingresado:</span>
+                                                        <span className="font-bold text-foreground ml-1">${sale.efectivoIngresado.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-muted-foreground">Vuelto entregado:</span>
+                                                        <span className="font-bold text-green-500 ml-1 bg-green-500/10 px-2 py-0.5 rounded">${(sale.vuelto || 0).toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -460,10 +489,10 @@ export default function SalesClient({ initialSales }: Props) {
                     )}
 
                     {/* --- Paginación --- */}
-                    {!loading && sales.length > 0 && (
+                    {!loading && displayedSales.length > 0 && (
                         <Pagination
                             productsPerPage={salesPerPage}
-                            totalProducts={sales.length}
+                            totalProducts={displayedSales.length}
                             currentPage={currentPage}
                             paginate={(page) => setCurrentPage(page)}
                         />

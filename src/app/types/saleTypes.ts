@@ -14,6 +14,8 @@ export interface FirestoreSale {
     paymentMethod?: string;
     products?: FirestoreProduct[];
     facturaId?: string; // ID of the generated AFIP invoice
+    efectivoIngresado?: number;
+    vuelto?: number;
 }
 
 // Tipos ya normalizados (los que usás en el frontend)
@@ -31,4 +33,6 @@ export interface Sale {
     paymentMethod: string;
     products: Product[];
     facturaId?: string; // Optional field to link with AFIP invoice
+    efectivoIngresado?: number;
+    vuelto?: number;
 }
