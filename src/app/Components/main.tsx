@@ -107,7 +107,6 @@ const Main: React.FC = () => {
   };
 
   const handleDeleteNote = async (noteId: string) => {
-    if (!isAdmin) return;
     try {
       await deleteNote(noteId);
       loadNotes();
@@ -439,7 +438,6 @@ const Main: React.FC = () => {
                             <p className="text-muted-foreground mt-2 text-sm leading-relaxed animate-fade-in">{note.content}</p>
                           )}
                         </div>
-                        {isAdmin && (
                           <div className="flex gap-2 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={(e) => { e.stopPropagation(); handleStartEdit(note); }} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors" title="Editar">
                               <FaEdit />
@@ -448,7 +446,6 @@ const Main: React.FC = () => {
                               <FaTrash />
                             </button>
                           </div>
-                        )}
                       </div>
                       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md ${note.importance === 'high' ? 'bg-red-500/10 text-red-500' :
