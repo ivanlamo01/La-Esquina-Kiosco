@@ -511,7 +511,7 @@ function Cart() {
     }
     */
 
-    if (paymentMethod === "Efectivo") {
+    if (paymentMethod === "Efectivo" && efectivoIngresado.trim() !== "") {
       const efect = parseFloat(efectivoIngresado);
       if (isNaN(efect) || efect < total) {
         showAlert("danger", "Monto ingresado inválido o insuficiente para pago en efectivo.");
