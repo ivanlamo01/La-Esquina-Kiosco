@@ -36,11 +36,13 @@ const Producto: React.FC<ProductoProps> = ({
       </td>
       <td className="p-4">{Barcode}</td>
       <td className="p-4 font-medium">{title}</td>
-      <td className="p-4">${price}</td>
+      <td className="p-4">
+        ${price} {categoryName?.toLowerCase() === "peso" && <span className="text-xs text-muted-foreground ml-1">x Kg</span>}
+      </td>
       <td className="p-4">{categoryName ?? "Sin categoría"}</td>
       <td className="p-4 text-center">
         <span className={`${stock <= 5 ? "text-destructive font-bold" : "text-foreground"}`}>
-          {stock}
+          {stock} {categoryName?.toLowerCase() === "peso" && "Kg"}
         </span>
       </td>
       <td className="p-4 text-right">

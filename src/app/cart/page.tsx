@@ -18,8 +18,9 @@ import { isElectron } from "../lib/utils/environment";
 import { parseBarcode } from "../lib/utils/barcodeParser";
 import { ProductoData } from "../types/productTypes";
 import { Note } from "../types/taskTypes";
-import { getNotes } from "../lib/services/notesServices";
-import { FaExclamationCircle, FaFileInvoiceDollar, FaPrint, FaQuestionCircle, FaSearch, FaShoppingCart, FaTimes, FaTrash } from "react-icons/fa";
+import { getNotes, addNote, deleteNote, updateNote } from "../lib/services/notesServices";
+import { FaExclamationCircle, FaFileInvoiceDollar, FaPrint, FaQuestionCircle, FaSearch, FaShoppingCart, FaTimes, FaTrash, FaEdit } from "react-icons/fa";
+import { useAuthContext } from "../Context/AuthContext";
 import TicketTemplate from "../Components/TicketTemplate";
 import { Timestamp } from "firebase/firestore";
 import { Sale } from "../types/saleTypes";
@@ -90,6 +91,124 @@ function Cart() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [debtors, setDebtors] = useState<{ id: string; name: string }[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+
+  const { user } = useAuthContext();
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteContent, setNewNoteContent] = useState("");
+  const [newNoteImportance, setNewNoteImportance] = useState<'low' | 'medium' | 'high'>('low');
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [hasDeadline, setHasDeadline] = useState(false);
+  const [deadline, setDeadline] = useState("");
+  const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
+  const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+
+  // Edit state
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editImportance, setEditImportance] = useState<'low' | 'medium' | 'high'>('low');
+  const [editHasDeadline, setEditHasDeadline] = useState(false);
+  const [editDeadline, setEditDeadline] = useState("");
+
+  const loadNotes = async () => {
+    try {
+      const fetchedNotes = await getNotes();
+      setNotes(fetchedNotes);
+    } catch (error) {
+      console.error("Error cargando notas:", error);
+      setNotes([]);
+    }
+  };
+
+  const handleAddNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !newNoteContent.trim() || !newNoteTitle.trim()) return;
+    try {
+      await addNote(newNoteTitle, newNoteContent, newNoteImportance, user.id, hasDeadline ? deadline : undefined);
+      setNewNoteTitle("");
+      setNewNoteContent("");
+      setHasDeadline(false);
+      setDeadline("");
+      setIsAddingNote(false);
+      loadNotes();
+      showAlert("success", "Nota agregada correctamente");
+    } catch (error) {
+      console.error(error);
+      showAlert("danger", "Error al agregar nota");
+    }
+  };
+
+  const toggleNote = (id: string) => {
+    setExpandedNoteId(expandedNoteId === id ? null : id);
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(noteId);
+      loadNotes();
+      showAlert("success", "Nota eliminada");
+    } catch (error) {
+      console.error(error);
+      showAlert("danger", "Error al eliminar nota");
+    } finally {
+      setNoteToDelete(null);
+    }
+  };
+
+  const handleStartEdit = (note: Note) => {
+    setEditingNoteId(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+    setEditImportance(note.importance);
+    if (note.deadline) {
+      setEditHasDeadline(true);
+      let date: Date;
+      if (typeof note.deadline === 'object' && 'seconds' in note.deadline) {
+          date = new Date(note.deadline.seconds * 1000);
+      } else {
+          date = new Date(note.deadline as string | number | Date);
+      }
+      
+      const formattedDate = date.toISOString().slice(0, 16);
+      setEditDeadline(formattedDate);
+    } else {
+      setEditHasDeadline(false);
+      setEditDeadline("");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null);
+    setEditTitle("");
+    setEditContent("");
+    setEditImportance('low');
+    setEditHasDeadline(false);
+    setEditDeadline("");
+  };
+
+  const handleUpdateNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNoteId || !editTitle.trim() || !editContent.trim()) return;
+
+    try {
+      const updateData = {
+        title: editTitle,
+        content: editContent,
+        importance: editImportance,
+        deadline: editHasDeadline ? new Date(editDeadline) : undefined
+      };
+
+      await updateNote(editingNoteId, updateData);
+
+      showAlert("success", "Nota actualizada correctamente");
+      handleCancelEdit();
+      loadNotes();
+    } catch (error) {
+      console.error(error);
+      showAlert("danger", "Error al actualizar nota");
+    }
+  };
+
   // Estado para mapear id -> nombre de categoría
   const [categoriasMap, setCategoriasMap] = useState<Record<string, string>>({});
   const [searchResults, setSearchResults] = useState<(Product & { type: "product" | "promotion" })[]>([]);
@@ -209,11 +328,7 @@ function Cart() {
   }, []);
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      const fetchedNotes = await getNotes();
-      setNotes(fetchedNotes);
-    };
-    fetchNotes();
+    loadNotes();
   }, []);
 
   useEffect(() => {
@@ -397,7 +512,8 @@ function Cart() {
     const categoryName = categoriasMap[categoryId] ?? ""; // Nombre
 
     const runAddToCart = async () => {
-      if (categoryName === "Variables" || categoryName === "Devolucion") {
+      const catNameLower = categoryName.toLowerCase();
+      if (catNameLower === "variables" || catNameLower === "devolucion") {
         const enteredPrice = await showPrompt(
           `Precio para ${categoryName}`,
           "Ingrese el precio del producto:",
@@ -423,7 +539,7 @@ function Cart() {
         }
       }
       // Caso categoría PESO
-      else if (categoryName === "peso") {
+      else if (catNameLower === "peso") {
         const enteredWeight = await showPrompt(
           `Peso para ${product.data?.description || "Producto"}`,
           "Ingrese el peso en gramos:",
@@ -550,14 +666,22 @@ function Cart() {
               // --- LOGIC FOR STOCK DEDUCTION ---
               let quantityToDeduct = item.quantity;
 
-              // If category is "peso", extract grams from description
-              if (categoriasMap[productOrPromotion.data?.category] === "peso" || productOrPromotion.data?.category === "peso") {
-                // Try to find "100g" pattern in description
-                const match = item.customDescription?.match(/(\d+(?:\.\d+)?)g/);
-                if (match && match[1]) {
-                  const grams = parseFloat(match[1]);
-                  // Deduct grams * quantity (usually quantity is 1 for unique items, but just in case)
-                  quantityToDeduct = grams * item.quantity;
+              // If category is "peso", extract weight from description
+              const catMapName = categoriasMap[productOrPromotion.data?.category]?.toLowerCase();
+              const catRawName = productOrPromotion.data?.category?.toLowerCase();
+              if (catMapName === "peso" || catRawName === "peso") {
+                // Try to find "100g" or "1.500kg" pattern in description
+                const matchG = item.customDescription?.match(/(\d+(?:\.\d+)?)g/);
+                const matchKg = item.customDescription?.match(/(\d+(?:\.\d+)?)kg/i);
+                
+                if (matchG && matchG[1]) {
+                  const grams = parseFloat(matchG[1]);
+                  // Stock is in Kg, so deduct (grams / 1000)
+                  quantityToDeduct = (grams / 1000) * item.quantity;
+                } else if (matchKg && matchKg[1]) {
+                  const kilos = parseFloat(matchKg[1]);
+                  // Stock is in Kg, deduct directly
+                  quantityToDeduct = kilos * item.quantity;
                 }
               }
 
@@ -749,9 +873,15 @@ function Cart() {
                           <p className="text-xs text-muted-foreground">{item.data.Barcode} • {categoriasMap[item.data.category] || 'Sin categoría'}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-primary">${item.data.price}</p>
+                          <p className="font-bold text-primary">
+                            ${item.data.price}
+                            {categoriasMap[item.data.category]?.toLowerCase() === "peso" && (
+                              <span className="text-xs font-normal text-muted-foreground ml-1">x Kg</span>
+                            )}
+                          </p>
                           <p className={`text-[10px] ${item.data.stock <= 5 ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
                             Stock: {item.data.stock}
+                            {categoriasMap[item.data.category]?.toLowerCase() === "peso" && " Kg"}
                           </p>
                         </div>
                       </div>
@@ -800,7 +930,10 @@ function Cart() {
                     </thead>
                     <tbody className="divide-y divide-border">
                       {cart.map((item) => {
-                        const price = Number(item.customPrice ?? item.data.price);
+                        const isPeso = categoriasMap[item.data.category]?.toLowerCase() === "peso";
+                        const calculationPrice = Number(item.customPrice ?? item.data.price);
+                        const displayUnitPrice = isPeso ? Number(item.data.price) : calculationPrice;
+                        
                         return (
                           <tr
                             key={`${item.id}-${item.customDescription}`}
@@ -811,29 +944,36 @@ function Cart() {
                               <div className="text-xs text-muted-foreground">{item.data.Barcode}</div>
                             </td>
                             <td className="p-4 text-muted-foreground">
-                              ${price.toFixed(2)}
+                              ${displayUnitPrice.toFixed(2)}
+                              {isPeso && (
+                                <span className="text-xs font-normal text-muted-foreground ml-1">x Kg</span>
+                              )}
                             </td>
                             <td className="p-4 text-muted-foreground text-sm italic">
                               {item.customDescription || '-'}
                             </td>
                             <td className="p-4">
                               <div className="flex items-center justify-center">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    handleQuantityChange(
-                                      item.id,
-                                      Math.max(1, parseInt(e.target.value) || 1)
-                                    )
-                                  }
-                                  className="w-16 p-2 text-center bg-input border border-border rounded-lg text-foreground focus:border-primary outline-none"
-                                />
+                                {isPeso ? (
+                                  <span className="text-muted-foreground px-4 py-2 font-medium">1</span>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) =>
+                                      handleQuantityChange(
+                                        item.id,
+                                        Math.max(1, parseInt(e.target.value) || 1)
+                                      )
+                                    }
+                                    className="w-16 p-2 text-center bg-input border border-border rounded-lg text-foreground focus:border-primary outline-none"
+                                  />
+                                )}
                               </div>
                             </td>
                             <td className="p-4 text-right font-bold text-primary">
-                              ${(price * item.quantity).toFixed(2)}
+                              ${(calculationPrice * item.quantity).toFixed(2)}
                             </td>
                             <td className="p-4 text-center">
                               <button
@@ -952,39 +1092,206 @@ function Cart() {
           </div>
 
           {/* Notas Importantes */}
-          {notes.length > 0 && (
-            <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
-              <h4 className="text-primary font-bold mb-4 flex items-center gap-2">
-                <FaExclamationCircle /> Notas Importantes
+          <div className="bg-card border border-border p-6 rounded-2xl shadow-sm flex flex-col max-h-[600px] h-fit mt-6">
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="text-xl font-bold text-foreground flex items-center gap-2">
+                <span className="w-2 h-6 bg-primary rounded-full"></span>
+                Notas Importantes
               </h4>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {notes.map((note) => (
-                  <div
-                    key={note.id}
-                    className={`p-3 rounded-xl border-l-4 ${note.importance === 'high'
-                      ? 'border-red-500 bg-red-500/10'
-                      : note.importance === 'medium'
-                        ? 'border-yellow-500 bg-yellow-500/10'
-                        : 'border-blue-500 bg-blue-500/10'
-                      }`}
-                  >
-                    <p className="font-bold text-foreground">{note.title || "Nota"}</p>
-                    <p className="text-muted-foreground text-sm mt-1 mb-2">{note.content}</p>
-                    <div className="flex justify-between text-[10px] text-muted-foreground uppercase tracking-wide">
-                      <span>{formatNoteDate(note.createdAt)}</span>
-                      {note.deadline && (
-                        <span className="text-amber-500 font-semibold">
-                          Vence: {formatNoteDate(note.deadline)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <button
+                onClick={() => setIsAddingNote(!isAddingNote)}
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${isAddingNote
+                  ? "bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                  : "bg-primary text-primary-foreground hover:opacity-90 hover:scale-110"
+                  }`}
+              >
+                {isAddingNote ? <FaTimes /> : "+"}
+              </button>
             </div>
-          )}
+
+            {isAddingNote && (
+              <form onSubmit={handleAddNote} className="mb-6 p-4 bg-secondary/50 border border-border rounded-xl animate-slide-down">
+                <input
+                  type="text"
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="Título de la nota..."
+                  className="w-full bg-input text-foreground p-3 rounded-lg border border-input focus:border-primary outline-none mb-3 transition-colors text-sm"
+                />
+                <div className="flex flex-col gap-3 mb-3">
+                  <textarea
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    placeholder="Descripción..."
+                    rows={2}
+                    className="w-full bg-input text-foreground p-3 rounded-lg border border-input focus:border-primary outline-none transition-colors text-sm resize-none"
+                  />
+                  <select
+                    value={newNoteImportance}
+                    onChange={(e) => setNewNoteImportance(e.target.value as 'low' | 'medium' | 'high')}
+                    className="bg-input text-foreground p-3 rounded-lg border border-input focus:border-primary outline-none cursor-pointer text-sm"
+                  >
+                    <option value="low">Baja</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setHasDeadline(!hasDeadline)}>
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${hasDeadline ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"}`}>
+                      {hasDeadline && <span className="text-xs">✓</span>}
+                    </div>
+                    <span className="text-muted-foreground text-sm select-none">¿Tiene plazo?</span>
+                  </div>
+
+                  {hasDeadline && (
+                    <input
+                      type="datetime-local"
+                      value={deadline}
+                      onChange={(e) => setDeadline(e.target.value)}
+                      className="bg-input text-foreground p-2 rounded-lg border border-input focus:border-primary outline-none text-sm w-full"
+                      required={hasDeadline}
+                    />
+                  )}
+                </div>
+
+                <button type="submit" className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-lg hover:opacity-90 transition-colors shadow-md text-sm">
+                  Agregar Nota
+                </button>
+              </form>
+            )}
+
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+              {notes.map((note) => (
+                <div
+                  key={note.id}
+                  className={`p-4 rounded-xl border border-l-4 transition-all hover:translate-x-1 ${note.importance === 'high' ? 'border-border border-l-red-500 bg-card hover:bg-accent/50' :
+                    note.importance === 'medium' ? 'border-border border-l-amber-500 bg-card hover:bg-accent/50' :
+                      'border-border border-l-blue-500 bg-card hover:bg-accent/50'
+                    }`}
+                >
+                  {editingNoteId === note.id ? (
+                    <form onSubmit={handleUpdateNote} className="space-y-3">
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="w-full bg-input text-foreground p-2 rounded border border-input focus:border-primary outline-none text-sm"
+                        placeholder="Título"
+                      />
+                      <textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="w-full bg-input text-foreground p-2 rounded border border-input focus:border-primary outline-none resize-none text-sm"
+                        placeholder="Contenido"
+                        rows={2}
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <select
+                          value={editImportance}
+                          onChange={(e) => setEditImportance(e.target.value as 'low' | 'medium' | 'high')}
+                          className="w-full bg-input text-foreground p-2 rounded border border-input outline-none text-sm"
+                        >
+                          <option value="low">Baja</option>
+                          <option value="medium">Media</option>
+                          <option value="high">Alta</option>
+                        </select>
+                        <div className="flex items-center gap-2 bg-input p-2 rounded border border-input w-full">
+                          <input
+                            type="checkbox"
+                            checked={editHasDeadline}
+                            onChange={(e) => setEditHasDeadline(e.target.checked)}
+                            className="w-4 h-4 accent-primary"
+                          />
+                          <span className="text-sm text-muted-foreground">Plazo</span>
+                        </div>
+                        {editHasDeadline && (
+                          <input
+                            type="datetime-local"
+                            value={editDeadline}
+                            onChange={(e) => setEditDeadline(e.target.value)}
+                            className="w-full bg-input text-foreground p-2 rounded border border-input outline-none text-sm"
+                          />
+                        )}
+                      </div>
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button type="button" onClick={handleCancelEdit} className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 text-sm transition-colors">Cancelar</button>
+                        <button type="submit" className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-500 text-sm transition-colors">Guardar</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start group">
+                        <div className="flex-1 cursor-pointer" onClick={() => toggleNote(note.id)}>
+                          <h6 className="font-bold text-foreground text-base">{note.title || "Sin título"}</h6>
+                          {expandedNoteId === note.id && (
+                            <p className="text-muted-foreground mt-2 text-sm leading-relaxed animate-fade-in">{note.content}</p>
+                          )}
+                        </div>
+                          <div className="flex gap-1 ml-2">
+                            <button onClick={(e) => { e.stopPropagation(); handleStartEdit(note); }} className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors" title="Editar">
+                              <FaEdit size={12} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); setNoteToDelete(note.id); }} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors" title="Eliminar">
+                              <FaTrash size={12} />
+                            </button>
+                          </div>
+                      </div>
+                      <div className="mt-2 flex flex-col gap-1 text-[10px] text-muted-foreground">
+                        <div className="flex justify-between">
+                          <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded ${note.importance === 'high' ? 'bg-red-500/10 text-red-500' :
+                            note.importance === 'medium' ? 'bg-amber-500/10 text-amber-500' :
+                              'bg-blue-500/10 text-blue-500'
+                            }`}>
+                            <FaExclamationCircle size={10} />
+                            <span className="capitalize font-medium">{note.importance}</span>
+                          </div>
+                          <span>{formatNoteDate(note.createdAt)}</span>
+                        </div>
+                        {note.deadline && (
+                          <div className="flex justify-between items-center text-amber-500 font-medium bg-amber-500/10 px-1.5 py-0.5 rounded">
+                            <span>Vence:</span>
+                            <span>
+                              {(typeof note.deadline === 'object' && 'seconds' in note.deadline)
+                                ? new Date(note.deadline.seconds * 1000).toLocaleString()
+                                : new Date(note.deadline as string | number | Date).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+              {notes.length === 0 && (
+                <div className="flex flex-col items-center justify-center p-6 text-muted-foreground text-center">
+                  <FaExclamationCircle className="text-2xl mb-2 opacity-30" />
+                  <p className="text-sm">No hay notas.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* --- Custom Alert para Confirmar Eliminación de Nota --- */}
+      {noteToDelete && (
+        <CustomAlert
+          isOpen={true}
+          title="Eliminar nota"
+          message="¿Estás seguro de eliminar esta nota?"
+          type="warning"
+          showCancel
+          confirmText="Eliminar"
+          onConfirm={() => {
+            if (noteToDelete) {
+              void handleDeleteNote(noteToDelete);
+            }
+          }}
+          onCancel={() => setNoteToDelete(null)}
+        />
+      )}
 
       {/* --- Custom Alert Modal --- */}
       <CustomAlert
@@ -1043,8 +1350,16 @@ function Cart() {
                     {item.data.description && <p className="text-xs text-muted-foreground mt-1 italic">{item.data.description}</p>}
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-primary">${item.data.price}</span>
-                    <div className="text-xs text-muted-foreground">Stock: {item.data.stock}</div>
+                    <span className="text-lg font-bold text-primary">
+                      ${item.data.price}
+                      {categoriasMap[item.data.category]?.toLowerCase() === "peso" && (
+                        <span className="text-xs font-normal text-muted-foreground ml-1">x Kg</span>
+                      )}
+                    </span>
+                    <div className="text-xs text-muted-foreground">
+                      Stock: {item.data.stock}
+                      {categoriasMap[item.data.category]?.toLowerCase() === "peso" && " Kg"}
+                    </div>
                   </div>
                 </button>
               ))}
