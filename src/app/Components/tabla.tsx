@@ -159,7 +159,11 @@ const Tabla: React.FC = () => {
 
     // B. Filtro por Categoría
     if (filterCategory) {
-      result = result.filter(p => p.category === filterCategory);
+      if (filterCategory === "none") {
+        result = result.filter(p => !p.category || p.category === "" || !categoriasMap[p.category]);
+      } else {
+        result = result.filter(p => p.category === filterCategory);
+      }
     }
 
     // C. Filtro por Estado de Stock
@@ -187,7 +191,7 @@ const Tabla: React.FC = () => {
     setFilteredProductos(result);
     setCurrentPage(1); // Volver a pág 1 al filtrar
     setSelectedIds(new Set()); // Limpiar selección al filtrar
-  }, [searchTerm, filterCategory, filterStock, sortBy, allProductos]);
+  }, [searchTerm, filterCategory, filterStock, sortBy, allProductos, categoriasMap]);
 
   useEffect(() => {
     if (!isCategoryDropdownOpen) return;
@@ -517,7 +521,7 @@ const Tabla: React.FC = () => {
                 aria-haspopup="listbox"
                 aria-expanded={isCategoryDropdownOpen}
               >
-                {filterCategory ? categoriasMap[filterCategory] || "Todas las Categorías" : "Todas las Categorías"}
+                {filterCategory === "none" ? "Sin Categoría" : (filterCategory ? categoriasMap[filterCategory] || "Todas las Categorías" : "Todas las Categorías")}
               </button>
               {filterCategory && (
                 <button
@@ -554,6 +558,18 @@ const Tabla: React.FC = () => {
                         className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${!filterCategory ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'}`}
                       >
                         Todas las Categorías
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterCategory("none");
+                          setIsCategoryDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${filterCategory === "none" ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'}`}
+                      >
+                        Sin Categoría
                       </button>
                     </li>
                     {filteredCategoryEntries.map(([id, name]) => (

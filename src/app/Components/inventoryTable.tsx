@@ -95,8 +95,7 @@ const InventoryTable: React.FC = () => {
         const filtered = candidates.filter(p => {
           const isLowStock = p.stock <= 10; // "Poco stock" custom threshold
           const isIncludedCategory =
-            p.category !== "Variables" &&
-            p.category !== "Almacen2";
+            p.category !== "Variables";
 
           return isLowStock && isIncludedCategory;
         });

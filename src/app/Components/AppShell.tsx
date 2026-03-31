@@ -69,12 +69,6 @@ function AppShellClient({ children }: { children: React.ReactNode }) {
                     const data = cDoc.data();
                     const name = data.name || '';
                     
-                    // Force rename Almacen to Variables
-                    if (name.toLowerCase() === 'almacen') {
-                        await updateDoc(doc(db, 'Categorias', cDoc.id), { name: 'Variables' });
-                        continue;
-                    }
-
                     if (name && name.length > 0 && name[0] !== name[0].toUpperCase()) {
                         const newName = name.charAt(0).toUpperCase() + name.slice(1);
                         await updateDoc(doc(db, 'Categorias', cDoc.id), { name: newName });
