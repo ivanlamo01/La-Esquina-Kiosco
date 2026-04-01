@@ -865,6 +865,7 @@ function Cart() {
                         className={`p-4 cursor-pointer flex justify-between items-center transition-colors border-b last:border-0 border-border
                           ${index === selectedIndex ? 'bg-primary/20 bg-muted-foreground/10' : 'hover:bg-muted/50'}
                         `}
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => handleSelectSuggestion(item)}
                         onMouseEnter={() => setSelectedIndex(index)}
                       >
